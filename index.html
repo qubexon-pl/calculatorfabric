@@ -3,483 +3,378 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Microsoft Fabric Capacity Estimator</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Microsoft Fabric Capacity Tier Calculator</title>
   <style>
-    :root {
-      --bg: #0b1020;
-      --panel: #121a31;
-      --panel-2: #19223d;
-      --text: #ecf2ff;
-      --muted: #aebada;
-      --accent: #72a6ff;
-      --accent-2: #8ef0c8;
-      --warn: #ffd66b;
-      --border: #2a3966;
-      --bad: #ff8b8b;
-      --good: #8ef0c8;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: Inter, Segoe UI, Arial, sans-serif; color: var(--text);
-      background: linear-gradient(180deg, #09101e, #0f1630 35%, #0b1020 100%);
-    }
-    .wrap { max-width: 1500px; margin: 0 auto; padding: 24px 24px 96px; }
-    h1, h2, h3 { margin: 0 0 12px; }
-    p { color: var(--muted); line-height: 1.45; }
-    .hero {
-      background: linear-gradient(135deg, rgba(114,166,255,.14), rgba(142,240,200,.1));
-      border: 1px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-    .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; }
-    .left { display: grid; gap: 18px; }
-    .panel {
-      background: rgba(18,26,49,.96); border: 1px solid var(--border); border-radius: 18px; padding: 18px;
-      box-shadow: 0 10px 24px rgba(0,0,0,.18);
-    }
-    .section-title { display:flex; justify-content:space-between; gap:12px; align-items:center; }
-    .section-title small { color: var(--muted); }
-    .form-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .form-grid.two { grid-template-columns: repeat(2, 1fr); }
-    .form-grid.four { grid-template-columns: repeat(4, 1fr); }
-    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    input, select, textarea {
-      width:100%; border-radius: 12px; border:1px solid var(--border); background: var(--panel-2);
-      color: var(--text); padding: 10px 12px; outline: none;
-    }
-    input[type="checkbox"] { width:auto; transform: scale(1.15); }
-    .checkrow { display:flex; flex-wrap:wrap; gap:16px; margin-top: 8px; }
-    .checkrow label { display:flex; gap:8px; align-items:center; margin:0; font-size:14px; color: var(--text); }
-    .small { font-size: 12px; color: var(--muted); }
-    table { width:100%; border-collapse: collapse; }
-    th, td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align:left; font-size: 14px; }
-    th { color: var(--muted); font-weight: 600; }
-    .kpi-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-    .kpi {
-      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      border:1px solid var(--border); border-radius:16px; padding:14px;
-    }
-    .kpi .label { color: var(--muted); font-size: 12px; }
-    .kpi .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
-    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; font-weight: 700; }
-    .good { background: rgba(142,240,200,.16); color: var(--good); }
-    .warn { background: rgba(255,214,107,.16); color: var(--warn); }
-    .bad { background: rgba(255,139,139,.14); color: var(--bad); }
-    .subtle { background: rgba(114,166,255,.14); color: var(--accent); }
-    .actions { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-    button {
-      border:none; border-radius: 12px; padding: 11px 14px; cursor:pointer; font-weight:700;
-      background: linear-gradient(135deg, #72a6ff, #8ef0c8); color:#081120;
-    }
-    button.secondary { background: #223050; color: var(--text); border:1px solid var(--border); }
-    details { border:1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: rgba(255,255,255,.02); }
-    details summary { cursor:pointer; font-weight:700; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .footer-note { margin-top: 14px; font-size: 12px; color: var(--muted); }
-    .floating-calc {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 1050;
-      box-shadow: 0 12px 30px rgba(0,0,0,.35);
-    }
-    .mix-preview { margin-top: 8px; color: var(--accent-2); font-size: 12px; }
-    @media (max-width: 1100px) {
-      .grid { grid-template-columns: 1fr; }
-      .form-grid, .form-grid.two, .form-grid.four { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 720px) {
-      .form-grid, .form-grid.two, .form-grid.four, .kpi-grid { grid-template-columns: 1fr; }
+    body { font-family: Georgia, 'Times New Roman', serif; margin: 0; background:#f5f5f5; color:#111; }
+    .wrap { max-width: 1280px; margin: 28px auto 56px; padding: 0 20px; }
+    h1 { font-size: 46px; margin: 0 0 26px; line-height:1.1; }
+    h2 { font-size: 31px; letter-spacing:.3px; margin: 40px 0 14px; text-transform: uppercase; }
+    .grid2, .grid3 { display:grid; gap:14px; }
+    .grid2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .grid3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .field label { display:block; font-size:25px; margin-bottom:6px; }
+    .hint { font-size: 21px; color:#444; margin-top:4px; }
+    input, select { width:100%; font-size:28px; padding:8px 10px; border:1px solid #c9c9c9; border-radius:2px; background:white; }
+    .summary-row { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:14px; margin:28px 0 22px; }
+    .metric { border-top:1px solid #bbb; padding-top:12px; }
+    .metric .k { font-size:24px; color:#333; }
+    .metric .v { font-size:50px; margin-top:6px; line-height:1; }
+    .metric .s { font-size:25px; color:#333; margin-top:4px; }
+    table { width:100%; border-collapse: collapse; font-size:29px; }
+    th, td { text-align:left; padding:10px 6px; border-bottom:1px solid #ddd; vertical-align:top; }
+    th { font-size:25px; color:#333; font-weight:normal; }
+    .bar-wrap { margin-top:18px; border:1px solid #ddd; padding:14px; background:#fff; }
+    .bar-row { display:grid; grid-template-columns: 320px 1fr 90px; gap:10px; align-items:center; margin:8px 0; font-size:23px; }
+    .bar { height:30px; background:#e8e8e8; position:relative; }
+    .bar > span { position:absolute; left:0; top:0; height:100%; }
+    .c1{background:#1b9e77}.c2{background:#66c2a5}.c3{background:#2c7fb8}.c4{background:#e66101}.c5{background:#7570b3}
+    .sku-fit { display:grid; grid-template-columns:1fr 1fr; gap:24px; text-align:center; margin:24px 0; }
+    .sku-box { border-top:1px solid #bbb; padding-top:14px; }
+    .sku-name { font-size:44px; }
+    .small { font-size:23px; color:#333; }
+    .note { font-size:22px; margin:10px 0; }
+    .legend { font-size:22px; color:#333; margin-top:8px; }
+    @media (max-width: 1200px){
+      h1 { font-size: 34px; }
+      .field label, .hint, .metric .k, th, .small, .legend, .note { font-size: 16px; }
+      input, select, table { font-size: 18px; }
+      .metric .v, .sku-name { font-size: 30px; }
+      .summary-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .grid3 { grid-template-columns:1fr; }
+      .grid2 { grid-template-columns:1fr; }
+      .bar-row { grid-template-columns: 180px 1fr 60px; font-size: 15px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="hero">
-      <h1>Microsoft Fabric Capacity Estimator</h1>
-      <p>
-        A planning-grade calculator for sizing Fabric capacity at the <strong>CU</strong> level. It lets you model migration style
-        (pipelines, notebooks, dataflows, mirroring, warehouse loads, shortcuts), storage growth, time horizon, semantic-model/report mix,
-        Lakehouse vs Warehouse gold layer, DAX complexity, real-time analytics, and ML. The result is a <strong>recommended F SKU</strong>
-        plus a detailed explanation of the workload components driving that recommendation.
-      </p>
-      <p class="small">
-        This is a heuristic estimator, not an official Microsoft sizing engine. Use it for planning, then calibrate with the Fabric Capacity Metrics app after a pilot.
-      </p>
+    <h1>Microsoft Fabric Capacity Tier Calculator — interactive tool that estimates required F-SKU based on your workloads</h1>
+
+    <h2>Users & Licenses</h2>
+    <div class="grid2">
+      <div class="field"><label>Power BI explorers (readers)</label><input id="explorers" type="number" value="50" min="0"><div class="hint">View reports only — no Pro license needed on Fabric F SKU</div></div>
+      <div class="field"><label>Power BI creators (authors)</label><input id="creators" type="number" value="10" min="0"><div class="hint">Publish & edit — need Pro or PPU license</div></div>
+      <div class="field"><label>Concurrent peak users (explorers)</label><input id="concurrentUsers" type="number" value="20" min="0"><div class="hint">How many hit reports at the same time</div></div>
+      <div class="field"><label>Avg. report open time (seconds)</label><input id="reportOpenSec" type="number" value="10" min="1"><div class="hint">Time to fully render all visuals</div></div>
     </div>
 
-    <button class="floating-calc" onclick="calculate()">Calculate Capacity</button>
-
-    <div class="grid">
-      <div class="left">
-        <div class="panel">
-          <div class="section-title"><h2>1) Data footprint & time horizon</h2><small>storage + movement profile</small></div>
-          <div class="form-grid">
-            <div><label>Current data volume</label><input id="currentTb" type="number" min="0" step="0.1" value="10"></div>
-            <div><label>Current data unit</label>
-              <select id="currentDataUnit">
-                <option value="TB" selected>TB</option>
-                <option value="GB">GB</option>
-              </select>
-            </div>
-            <div><label>Annual growth (%)</label><input id="growthPct" type="number" min="0" step="0.1" value="20"></div>
-            <div><label>Time horizon (years)</label><input id="horizonYears" type="number" min="1" step="1" value="3"></div>
-            <div><label>Daily changed data (%)</label><input id="dailyChangePct" type="number" min="0" max="100" step="0.1" value="5"></div>
-            <div><label>Monthly full-reload share (%)</label><input id="monthlyFullReloadPct" type="number" min="0" max="100" step="0.1" value="10"></div>
-            <div><label>ETL processing window (hours)</label><input id="etlWindowHours" type="number" min="0.5" step="0.5" value="6"></div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="section-title"><h2>2) Migration methods</h2><small>share of the migrated estate</small></div>
-          <div class="form-grid two">
-            <div><label>Pipelines (%)</label><input id="pctPipelines" type="number" min="0" max="100" step="1" value="35"></div>
-            <div><label>Notebooks / Spark (%)</label><input id="pctNotebooks" type="number" min="0" max="100" step="1" value="30"></div>
-            <div><label>Dataflows Gen2 (%)</label><input id="pctDataflows" type="number" min="0" max="100" step="1" value="10"></div>
-            <div><label>Mirroring (%)</label><input id="pctMirroring" type="number" min="0" max="100" step="1" value="5"></div>
-            <div><label>Warehouse / SQL loads (%)</label><input id="pctWarehouse" type="number" min="0" max="100" step="1" value="15"></div>
-            <div><label>Shortcuts / low-copy virtualization (%)</label><input id="pctShortcuts" type="number" min="0" max="100" step="1" value="5"></div>
-          </div>
-          <p class="small">The calculator normalizes these shares automatically if they don’t total 100%.</p>
-          <div id="migrationMixPreview" class="mix-preview"></div>
-        </div>
-
-        <div class="panel">
-          <div class="section-title"><h2>3) Data architecture</h2><small>medallion and object footprint</small></div>
-          <div class="form-grid four">
-            <div><label>Bronze objects</label><input id="bronzeObjects" type="number" min="0" step="1" value="120"></div>
-            <div><label>Silver objects</label><input id="silverObjects" type="number" min="0" step="1" value="90"></div>
-            <div><label>Gold objects</label><input id="goldObjects" type="number" min="0" step="1" value="40"></div>
-            <div><label>Warehouse tables/views</label><input id="warehouseObjects" type="number" min="0" step="1" value="35"></div>
-          </div>
-          <div class="checkrow">
-            <label><input id="goldInWarehouse" type="checkbox" checked> Gold layer in Warehouse</label>
-            <label><input id="goldInLakehouse" type="checkbox" checked> Gold layer in Lakehouse</label>
-            <label><input id="threeLayer" type="checkbox" checked> 3-layer architecture (Bronze/Silver/Gold)</label>
-            <label><input id="cdcEnabled" type="checkbox" checked> CDC / incremental ingestion</label>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="section-title"><h2>4) BI / semantic model workload</h2><small>reports, users, storage mode, refresh</small></div>
-          <div class="form-grid">
-            <div><label>Semantic models</label><input id="semanticModels" type="number" min="0" step="1" value="25"></div>
-            <div><label>Reports</label><input id="reports" type="number" min="0" step="1" value="80"></div>
-            <div><label>Peak concurrent report users</label><input id="peakUsers" type="number" min="0" step="1" value="120"></div>
-            <div><label>Model refreshes / day</label><input id="refreshesPerDay" type="number" min="0" step="1" value="6"></div>
-            <div><label>Authors / developers</label><input id="authors" type="number" min="0" step="1" value="20"></div>
-            <div><label>Peak query concurrency factor</label><input id="queryConcurrency" type="number" min="0.5" step="0.1" value="1.4"></div>
-          </div>
-          <div class="form-grid three">
-            <div><label>Import models (%)</label><input id="pctImport" type="number" min="0" max="100" step="1" value="35"></div>
-            <div><label>Direct Lake models (%)</label><input id="pctDirectLake" type="number" min="0" max="100" step="1" value="45"></div>
-            <div><label>DirectQuery models (%)</label><input id="pctDirectQuery" type="number" min="0" max="100" step="1" value="20"></div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="section-title"><h2>5) DAX / advanced analytics</h2><small>complexity buckets and optional workloads</small></div>
-          <div class="form-grid">
-            <div><label>Easy DAX measures</label><input id="daxEasy" type="number" min="0" step="1" value="250"></div>
-            <div><label>Moderate DAX measures</label><input id="daxModerate" type="number" min="0" step="1" value="120"></div>
-            <div><label>Complex DAX measures</label><input id="daxComplex" type="number" min="0" step="1" value="35"></div>
-            <div><label>Real-time / event workload (0–5)</label><input id="realtimeLevel" type="number" min="0" max="5" step="1" value="1"></div>
-            <div><label>Machine learning workload (0–5)</label><input id="mlLevel" type="number" min="0" max="5" step="1" value="1"></div>
-            <div><label>Data science / experimentation intensity (0–5)</label><input id="dsLevel" type="number" min="0" max="5" step="1" value="1"></div>
-          </div>
-          <div class="checkrow">
-            <label><input id="useRealtime" type="checkbox"> Real-time analytics used</label>
-            <label><input id="useMl" type="checkbox"> Machine learning used</label>
-            <label><input id="useRls" type="checkbox" checked> RLS / OLS in semantic models</label>
-            <label><input id="useCiCd" type="checkbox" checked> CI/CD deployment pipelines</label>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="section-title"><h2>6) Planning assumptions</h2><small>adjust coefficients to fit your environment</small></div>
-          <div class="form-grid">
-            <div><label>Safety buffer (%)</label><input id="safetyPct" type="number" min="0" step="1" value="25"></div>
-            <div><label>Burst / smoothing headroom (%)</label><input id="burstPct" type="number" min="0" step="1" value="15"></div>
-            <div><label>Pilot calibration multiplier</label><input id="calibration" type="number" min="0.3" step="0.05" value="1"></div>
-            <div><label>Transformation complexity</label>
-              <select id="transformComplexity">
-                <option value="0.8">Light</option>
-                <option value="1" selected>Moderate</option>
-                <option value="1.35">Heavy</option>
-                <option value="1.7">Very heavy</option>
-              </select>
-            </div>
-            <div><label>Source system parallelism</label>
-              <select id="sourceParallelism">
-                <option value="0.85">Low</option>
-                <option value="1" selected>Medium</option>
-                <option value="1.2">High</option>
-                <option value="1.4">Very high</option>
-              </select>
-            </div>
-            <div><label>Report interaction intensity</label>
-              <select id="reportIntensity">
-                <option value="0.8">Light</option>
-                <option value="1" selected>Moderate</option>
-                <option value="1.3">Heavy</option>
-                <option value="1.6">Executive / bursty</option>
-              </select>
-            </div>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" onclick="calculate()">Calculate capacity</button>
-            <button class="secondary btn btn-outline-light" onclick="loadExample('etl-heavy')">Load ETL-heavy example</button>
-            <button class="secondary btn btn-outline-light" onclick="loadExample('bi-heavy')">Load BI-heavy example</button>
-            <button class="secondary btn btn-outline-light" onclick="loadExample('cu-scenario')">Load 10 GB CU scenario</button>
-            <button class="secondary btn btn-outline-light" onclick="window.print()">Print / Save PDF</button>
-          </div>
-        </div>
+    <h2>Pipelines — data ingestion (bronze layer)</h2>
+    <div class="grid3">
+      <div class="field"><label>Number of pipelines</label><input id="pipelines" type="number" value="10" min="0"></div>
+      <div class="field"><label>Data volume per pipeline (GB)</label><input id="pipelineGb" type="number" value="5" min="0"></div>
+      <div class="field"><label>Avg. pipeline duration (min)</label><input id="pipelineMin" type="number" value="30" min="1"></div>
+      <div class="field"><label>Source complexity</label>
+        <select id="sourceComplexity">
+          <option value="8" selected>Simple (flat files, direct DB)</option>
+          <option value="16">Medium (joins, APIs)</option>
+          <option value="32">Complex (many mappings, staging)</option>
+          <option value="64">Very complex (many connectors + heavy joins)</option>
+        </select>
       </div>
-
-      <div class="panel">
-        <div class="section-title"><h2>Recommendation</h2><small>steady-state, peak, horizon</small></div>
-        <div class="kpi-grid">
-          <div class="kpi"><div class="label">Projected data at horizon</div><div id="kpiData" class="value">-</div></div>
-          <div class="kpi"><div class="label">Recommended SKU now</div><div id="kpiSku" class="value">-</div></div>
-          <div class="kpi"><div class="label">Estimated peak CUs</div><div id="kpiPeak" class="value">-</div></div>
-          <div class="kpi"><div class="label">Estimated steady CUs</div><div id="kpiSteady" class="value">-</div></div>
-        </div>
-
-        <table>
-          <thead><tr><th>Workload area</th><th>Estimated CU</th><th>Driver</th></tr></thead>
-          <tbody id="workloadTable"></tbody>
-        </table>
-
-        <h3 style="margin-top:16px;">Capacity fit</h3>
-        <table>
-          <thead><tr><th>SKU</th><th>CUs</th><th>Status</th><th>Notes</th></tr></thead>
-          <tbody id="skuTable"></tbody>
-        </table>
-
-        <h3 style="margin-top:16px;">Detailed rationale</h3>
-        <div id="narrative" style="white-space: pre-wrap; line-height:1.45; color: var(--text);"></div>
-
-        <details style="margin-top:14px;">
-          <summary>How the estimator works</summary>
-          <p class="small">
-            The calculator projects future data volume, derives daily processed volume, allocates that work across Fabric engines,
-            estimates ETL/ELT compute, adds semantic-model/reporting load, then applies safety and burst headroom before mapping the result to the nearest F SKU.
-            CU estimates are intentionally conservative and editable through the planning assumptions controls.
-          </p>
-          <p class="small mono" id="formulaBlock"></p>
-        </details>
-
-        <div class="footer-note">
-          Suggested next step: run your first migrated domain on a temporary Fabric capacity, compare this model with the Capacity Metrics app,
-          then adjust the calibration multiplier and workload coefficients before buying a long-term reserved capacity.
-        </div>
+      <div class="field"><label>Run schedule</label>
+        <select id="pipelineSchedule">
+          <option value="1" selected>Once per day</option>
+          <option value="2">Every 12 hours</option>
+          <option value="4">Every 6 hours</option>
+          <option value="24">Hourly</option>
+        </select>
       </div>
     </div>
+    <div class="note" id="pipelineBasis"></div>
+
+    <h2>Notebooks — Spark transformations</h2>
+    <div class="grid3">
+      <div class="field"><label>Number of notebooks</label><input id="notebooks" type="number" value="5" min="0"></div>
+      <div class="field"><label>Avg. notebook duration (min)</label><input id="notebookMin" type="number" value="20" min="1"></div>
+      <div class="field"><label>Spark vCores per notebook</label>
+        <select id="sparkVCores">
+          <option value="4">4 vCores (small)</option>
+          <option value="8" selected>8 vCores (medium)</option>
+          <option value="16">16 vCores (large)</option>
+          <option value="32">32 vCores (x-large)</option>
+        </select>
+      </div>
+      <div class="field"><label>Silver transformation complexity</label>
+        <select id="silverComplexity">
+          <option value="1.2">Simple (basic casts, rename)</option>
+          <option value="1.7" selected>Medium (window functions, dedup)</option>
+          <option value="2.3">Complex (many joins + heavy UDF)</option>
+        </select>
+      </div>
+      <div class="field"><label>Gold layer complexity</label>
+        <select id="goldComplexity">
+          <option value="1.2">Simple (single fact)</option>
+          <option value="1.7" selected>Medium (multiple fact tables)</option>
+          <option value="2.3">Complex (star + SCD + aggregates)</option>
+        </select>
+      </div>
+    </div>
+    <div class="note" id="notebookBasis"></div>
+
+    <h2>Medallion architecture — object counts</h2>
+    <div class="grid3">
+      <div class="field"><label>Bronze objects</label><input id="bronzeObjects" type="number" value="20" min="0"><div class="hint">Raw tables/files</div></div>
+      <div class="field"><label>Silver objects</label><input id="silverObjects" type="number" value="15" min="0"><div class="hint">Cleansed entities</div></div>
+      <div class="field"><label>Gold objects</label><input id="goldObjects" type="number" value="8" min="0"><div class="hint">Facts + dims</div></div>
+      <div class="field"><label>Bronze data volume (GB)</label><input id="bronzeVolume" type="number" value="50" min="0"></div>
+      <div class="field"><label>Expected growth per month (%)</label><input id="growthMonthPct" type="number" value="10" min="0"></div>
+    </div>
+
+    <h2>Semantic models & Power BI reports</h2>
+    <div class="grid3">
+      <div class="field"><label>Semantic models</label><input id="semanticModels" type="number" value="3" min="0"></div>
+      <div class="field"><label>Power BI reports</label><input id="pbireports" type="number" value="10" min="0"></div>
+      <div class="field"><label>Paginated reports</label><input id="paginatedReports" type="number" value="2" min="0"></div>
+      <div class="field"><label>Semantic model complexity</label>
+        <select id="semanticComplexity">
+          <option value="1.0">Simple (&lt;10 tables)</option>
+          <option value="1.5" selected>Medium (10-30 tables, RLS)</option>
+          <option value="2.2">Complex (&gt;30 tables, calc groups)</option>
+        </select>
+      </div>
+      <div class="field"><label>Report complexity</label>
+        <select id="reportComplexity">
+          <option value="8">Simple (5-10 visuals)</option>
+          <option value="15" selected>Medium (10-20 visuals)</option>
+          <option value="25">Complex (20-30 visuals)</option>
+          <option value="35">Heavy (+ drillthrough, bookmarks)</option>
+        </select>
+      </div>
+      <div class="field"><label>Refresh frequency</label>
+        <select id="refreshFrequency">
+          <option value="1">Daily</option>
+          <option value="2">Every 12 hours</option>
+          <option value="4" selected>Every 6 hours</option>
+          <option value="8">Every 3 hours</option>
+          <option value="24">Hourly</option>
+        </select>
+      </div>
+      <div class="field"><label>Avg. model refresh duration (min)</label><input id="refreshMin" type="number" value="15" min="1"></div>
+    </div>
+
+    <h2>Advanced workloads</h2>
+    <div class="grid2">
+      <div class="field"><label>Real-time / streaming</label>
+        <select id="realtime">
+          <option value="1.0" selected>None</option>
+          <option value="1.2">Light</option>
+          <option value="1.4">Medium</option>
+          <option value="1.7">Heavy</option>
+        </select>
+      </div>
+      <div class="field"><label>Machine learning (ML)</label>
+        <select id="ml">
+          <option value="1.0" selected>None</option>
+          <option value="1.1">Light</option>
+          <option value="1.25">Medium</option>
+          <option value="1.5">Heavy</option>
+        </select>
+      </div>
+      <div class="field"><label>Dataflows Gen2</label>
+        <select id="dataflows">
+          <option value="1.0" selected>None</option>
+          <option value="1.05">Light</option>
+          <option value="1.1">Medium</option>
+          <option value="1.2">Heavy</option>
+        </select>
+      </div>
+      <div class="field"><label>Safety headroom</label>
+        <select id="headroomPct">
+          <option value="0.2">20%</option>
+          <option value="0.35" selected>35% — recommended</option>
+          <option value="0.5">50%</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="metric"><div class="k">Recommended SKU</div><div class="v" id="skuRec">F8</div><div class="s" id="skuRecSub">8 Capacity Units</div></div>
+      <div class="metric"><div class="k">Required CU (raw)</div><div class="v" id="requiredRaw">0.0</div><div class="s">CU</div></div>
+      <div class="metric"><div class="k">With 35% headroom</div><div class="v" id="requiredHeadroom">0.0</div><div class="s">CU needed</div></div>
+      <div class="metric"><div class="k">Utilization (avg)</div><div class="v" id="utilization">0%</div><div class="s" id="utilSub">of F8</div></div>
+      <div class="metric"><div class="k">Peak interactive</div><div class="v" id="peakInteractive">0.0</div><div class="s">CU (instant)</div></div>
+    </div>
+
+    <h2>Workload breakdown — CU proof table</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Workload</th><th>Type</th><th>CU-hr/day</th><th>Avg CU (smoothed)</th><th>Calculation basis</th>
+        </tr>
+      </thead>
+      <tbody id="proofBody"></tbody>
+    </table>
+
+    <div class="legend">Background workloads (pipelines, notebooks, refreshes) are smoothed by Fabric over a 24-hour window — only their average CU rate counts toward capacity sizing.</div>
+    <div class="legend">Interactive operations (Power BI queries) are NOT smoothed and must fit within the instantaneous CU ceiling.</div>
+
+    <h2>CU distribution by workload</h2>
+    <div class="bar-wrap" id="bars"></div>
+
+    <h2>SKU comparison — fit your workload</h2>
+    <div class="sku-fit">
+      <div class="sku-box">
+        <div class="small">Minimum fitting tier</div>
+        <div class="sku-name" id="skuMin">F2</div>
+        <div class="small" id="skuMinSub">2 CU</div>
+      </div>
+      <div class="sku-box">
+        <div class="small">Recommended</div>
+        <div class="sku-name" id="skuRecommended">F8</div>
+        <div class="small" id="skuRecommendedSub">57% utilized</div>
+      </div>
+    </div>
+
+    <h2>Key rate references (official Microsoft docs)</h2>
+    <table>
+      <thead><tr><th>Workload</th><th>Official rate</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>Pipeline data movement (Copy activity)</td><td>1.5 CU-hr per ITO unit per run</td><td>learn.microsoft.com/fabric/data-factory/pricing-pipelines</td></tr>
+        <tr><td>Spark / Notebooks</td><td>1 CU = 2 Spark vCores</td><td>learn.microsoft.com/fabric/enterprise/optimize-capacity</td></tr>
+        <tr><td>KQL Database</td><td>vCores × active seconds = CU-seconds</td><td>learn.microsoft.com/fabric/enterprise/fabric-operations</td></tr>
+        <tr><td>Power BI semantic model (8 CU = 1 v-core)</td><td>8 CUs = 1 Power BI v-core</td><td>learn.microsoft.com/fabric/enterprise/fabric-operations</td></tr>
+        <tr><td>Background smoothing window</td><td>24-hour rolling average</td><td>learn.microsoft.com/fabric/enterprise/throttling</td></tr>
+        <tr><td>CU measurement interval</td><td>30-second evaluation periods</td><td>learn.microsoft.com/fabric/enterprise/plan-capacity</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <script>
-    const skuMap = [2,4,8,16,32,64,128,256,512,1024,2048].map(cu => ({ sku: 'F' + cu, cu }));
+    const skuLevels = [2,4,8,16,32,64,128,256,512,1024,2048];
+    const id = (name) => document.getElementById(name);
+    const n = (name) => parseFloat(id(name).value || 0);
+    const fmt = (value, digits = 2) => Number(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-    function num(id){ return parseFloat(document.getElementById(id).value || 0); }
-    function checked(id){ return document.getElementById(id).checked; }
-    function fmt(n, d=1){ return Number(n).toLocaleString(undefined,{maximumFractionDigits:d, minimumFractionDigits:d}); }
-    function pickSku(requiredCu){
-      for (const s of skuMap) if (requiredCu <= s.cu) return s;
-      return skuMap[skuMap.length-1];
+    function pickSku(required) {
+      const level = skuLevels.find((v) => required <= v) || skuLevels[skuLevels.length - 1];
+      return { sku: `F${level}`, cu: level };
     }
 
-    function normalize(parts){
-      const sum = Object.values(parts).reduce((a,b)=>a+b,0) || 1;
-      const out = {};
-      for (const [k,v] of Object.entries(parts)) out[k] = v / sum;
-      return out;
-    }
+    function recalculate() {
+      const pipelines = n('pipelines');
+      const pipelineMin = Math.max(1, n('pipelineMin'));
+      const ito = n('sourceComplexity');
+      const pipelineRuns = n('pipelineSchedule');
+      const pipelineHours = pipelineMin / 60;
+      const pipelineCuHrDay = pipelines * 1.5 * ito * pipelineHours * pipelineRuns;
+      const pipelineAvgCu = pipelineCuHrDay / 24;
 
-    function calculate(){
-      const currentVolume = num('currentTb');
-      const currentTb = document.getElementById('currentDataUnit').value === 'GB' ? currentVolume / 1000 : currentVolume;
-      const growthPct = num('growthPct') / 100;
-      const horizonYears = num('horizonYears');
-      const dailyChangePct = num('dailyChangePct') / 100;
-      const monthlyFullReloadPct = num('monthlyFullReloadPct') / 100;
-      const etlWindowHours = Math.max(0.5, num('etlWindowHours'));
-      const projectedTb = currentTb * Math.pow(1 + growthPct, horizonYears);
-      const avgTb = (currentTb + projectedTb) / 2;
-      const dailyChangedTb = avgTb * dailyChangePct;
-      const monthlyReloadTbPerDay = avgTb * monthlyFullReloadPct / 30;
-      const dailyProcessedTb = dailyChangedTb + monthlyReloadTbPerDay;
+      const notebooks = n('notebooks');
+      const notebookMin = Math.max(1, n('notebookMin'));
+      const vcores = n('sparkVCores');
+      const nbComplexity = (n('silverComplexity') + n('goldComplexity')) / 2;
+      const notebookRuns = pipelineRuns;
+      const notebookCuHrRun = (vcores / 2) * (notebookMin / 60) * nbComplexity;
+      const notebookCuHrDay = notebooks * notebookCuHrRun * notebookRuns;
+      const notebookAvgCu = notebookCuHrDay / 24;
 
-      const migrationMix = normalize({
-        pipelines: num('pctPipelines'), notebooks: num('pctNotebooks'), dataflows: num('pctDataflows'),
-        mirroring: num('pctMirroring'), warehouse: num('pctWarehouse'), shortcuts: num('pctShortcuts')
-      });
+      const semanticModels = n('semanticModels');
+      const semanticComplexity = n('semanticComplexity');
+      const refreshMin = Math.max(1, n('refreshMin'));
+      const refreshesPerDay = n('refreshFrequency');
+      const semanticCuHrRefresh = (refreshMin / 60) * 2 * semanticComplexity;
+      const semanticCuHrDay = semanticModels * semanticCuHrRefresh * refreshesPerDay;
+      const semanticAvgCu = semanticCuHrDay / 24;
 
-      const objectCount = num('bronzeObjects') + num('silverObjects') + num('goldObjects') + num('warehouseObjects');
-      const architectureFactor =
-        (checked('threeLayer') ? 1.10 : 1.0) *
-        (checked('goldInWarehouse') ? 1.08 : 1.0) *
-        (checked('goldInLakehouse') ? 1.04 : 1.0) *
-        (checked('cdcEnabled') ? 0.92 : 1.08) *
-        (1 + Math.min(objectCount, 1000) / 5000);
+      const paginated = n('paginatedReports');
+      const paginatedComplexity = semanticComplexity;
+      const paginatedCuHrDay = paginated * 0.5 * paginatedComplexity;
+      const paginatedAvgCu = paginatedCuHrDay / 24;
 
-      const complexity = num('transformComplexity');
-      const parallelism = num('sourceParallelism');
-      const calibration = num('calibration');
-      const safety = 1 + num('safetyPct')/100;
-      const burst = 1 + num('burstPct')/100;
-      const reportIntensity = num('reportIntensity');
+      const concurrent = n('concurrentUsers');
+      const visualsPerReport = n('reportComplexity');
+      const reportOpenSec = Math.max(1, n('reportOpenSec'));
+      const renderFactor = reportOpenSec;
+      const visualCuSec = 0.038;
+      const interactiveCu = concurrent * visualsPerReport * visualCuSec * renderFactor / 100;
 
-      const etlBaseCu = (dailyProcessedTb / etlWindowHours) * 7.5 * complexity * parallelism * architectureFactor;
+      const advancedFactor = n('realtime') * n('ml') * n('dataflows');
 
-      const etlWorkloads = {
-        pipelines: etlBaseCu * migrationMix.pipelines * 0.75,
-        notebooks: etlBaseCu * migrationMix.notebooks * 1.45,
-        dataflows: etlBaseCu * migrationMix.dataflows * 0.95,
-        mirroring: etlBaseCu * migrationMix.mirroring * 0.55,
-        warehouse: etlBaseCu * migrationMix.warehouse * 1.10,
-        shortcuts: etlBaseCu * migrationMix.shortcuts * 0.20
-      };
+      const rawRequiredCu = (pipelineAvgCu + notebookAvgCu + semanticAvgCu + paginatedAvgCu + interactiveCu) * advancedFactor;
+      const headroom = 1 + n('headroomPct');
+      const withHeadroomCu = rawRequiredCu * headroom;
 
-      const semanticModels = num('semanticModels');
-      const reports = num('reports');
-      const peakUsers = num('peakUsers');
-      const refreshesPerDay = num('refreshesPerDay');
-      const authors = num('authors');
-      const queryConcurrency = num('queryConcurrency');
-      const modeMix = normalize({ import: num('pctImport'), directLake: num('pctDirectLake'), directQuery: num('pctDirectQuery') });
+      const minSku = pickSku(rawRequiredCu);
+      const recommended = pickSku(withHeadroomCu);
+      const utilization = (rawRequiredCu / recommended.cu) * 100;
 
-      const daxWeight = (num('daxEasy')*0.015) + (num('daxModerate')*0.045) + (num('daxComplex')*0.12);
-      const rlsFactor = checked('useRls') ? 1.12 : 1.0;
-      const ciCdFactor = checked('useCiCd') ? 1.03 : 1.0;
+      id('pipelineBasis').textContent = `${pipelines} pipelines × ${pipelineMin}min × ITO factor ${ito} × 1.5 CU-hr rate × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay, 1)} CU-hr/day`;
+      id('notebookBasis').textContent = `${notebooks} notebooks × ${vcores} vCores ÷ 2 = ${(vcores/2).toFixed(0)} CUs × ${notebookMin}min ÷ 60 × complexity ${fmt(nbComplexity, 1)} = ${fmt(notebookCuHrRun, 2)} CU-hr/run × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(notebookCuHrDay, 1)} CU-hr/day`;
 
-      const refreshCu = semanticModels * refreshesPerDay * (modeMix.import*0.20 + modeMix.directLake*0.11 + modeMix.directQuery*0.05) * complexity * rlsFactor;
-      const queryCu = (peakUsers * queryConcurrency * reportIntensity) * (modeMix.import*0.045 + modeMix.directLake*0.055 + modeMix.directQuery*0.085) * (1 + reports/300) * (1 + daxWeight/20) * rlsFactor;
-      const authoringCu = authors * 0.12 * ciCdFactor * (1 + semanticModels/200);
+      id('skuRec').textContent = recommended.sku;
+      id('skuRecSub').textContent = `${recommended.cu} Capacity Units`;
+      id('requiredRaw').textContent = fmt(rawRequiredCu, 1);
+      id('requiredHeadroom').textContent = fmt(withHeadroomCu, 1);
+      id('utilization').textContent = `${fmt(utilization, 0)}%`;
+      id('utilSub').textContent = `of ${recommended.sku}`;
+      id('peakInteractive').textContent = fmt(interactiveCu, 2);
 
-      const realtimeCu = checked('useRealtime') ? (num('realtimeLevel') * 2.5 + dailyProcessedTb * 0.35) : 0;
-      const mlCu = checked('useMl') ? (num('mlLevel') * 3.5 + num('dsLevel') * 1.5 + avgTb * 0.12) : 0;
-      const metadataCu = objectCount * 0.015 + semanticModels * 0.08 + reports * 0.02;
+      id('skuMin').textContent = minSku.sku;
+      id('skuMinSub').textContent = `${minSku.cu} CU`;
+      id('skuRecommended').textContent = recommended.sku;
+      id('skuRecommendedSub').textContent = `${fmt(utilization, 0)}% utilized`;
 
-      const steadyRaw = Object.values(etlWorkloads).reduce((a,b)=>a+b,0) + refreshCu + queryCu + authoringCu + realtimeCu + mlCu + metadataCu;
-      const steadyCu = steadyRaw * calibration;
-      const peakCu = steadyCu * safety * burst;
-      const nowSku = pickSku(peakCu);
-      const horizonSku = pickSku(peakCu * Math.pow(1 + growthPct * 0.65, Math.max(horizonYears-1, 0)));
-
-      const rows = [
-        ['Pipelines', etlWorkloads.pipelines * calibration, 'orchestration / copy / control flow'],
-        ['Notebooks / Spark', etlWorkloads.notebooks * calibration, 'transformations / joins / notebooks'],
-        ['Dataflows Gen2', etlWorkloads.dataflows * calibration, 'self-service ETL / mashups'],
-        ['Mirroring', etlWorkloads.mirroring * calibration, 'continuous ingestion / source replication'],
-        ['Warehouse / SQL loads', etlWorkloads.warehouse * calibration, 'gold serving / SQL transforms'],
-        ['Shortcuts / virtualization', etlWorkloads.shortcuts * calibration, 'metadata-heavy, low-copy access'],
-        ['Semantic model refresh', refreshCu * calibration, 'import / Direct Lake / DirectQuery refreshes'],
-        ['Report query load', queryCu * calibration, 'peak users + DAX + storage mode mix'],
-        ['Authoring / CI-CD', authoringCu * calibration, 'developers, model changes, deployments'],
-        ['Real-time analytics', realtimeCu * calibration, 'streaming / event processing'],
-        ['Machine learning / DS', mlCu * calibration, 'training / scoring / experimentation'],
-        ['Metadata & object overhead', metadataCu * calibration, 'many objects, reports, semantic models']
+      const proofRows = [
+        {
+          workload: 'Pipelines (data movement)',
+          type: 'Background (smoothed 24h)',
+          cuHrDay: pipelineCuHrDay,
+          avgCu: pipelineAvgCu,
+          basis: `${pipelines} pipelines × ${pipelineMin}min × ITO factor ${ito} × 1.5 CU-hr rate × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay,1)} CU-hr/day`
+        },
+        {
+          workload: 'Notebooks (Spark)',
+          type: 'Background (smoothed 24h)',
+          cuHrDay: notebookCuHrDay,
+          avgCu: notebookAvgCu,
+          basis: `${notebooks} notebooks × ${vcores} vCores ÷ 2 × ${notebookMin}min ÷ 60 × complexity ${fmt(nbComplexity,1)} × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(notebookCuHrDay,1)} CU-hr/day`
+        },
+        {
+          workload: 'Semantic model refreshes',
+          type: 'Background (smoothed 24h)',
+          cuHrDay: semanticCuHrDay,
+          avgCu: semanticAvgCu,
+          basis: `${semanticModels} models × ${refreshMin}min ÷ 60 × 2 CU-hr/hr × complexity ${semanticComplexity} × ${refreshesPerDay} refreshes/day = ${fmt(semanticCuHrDay,1)} CU-hr/day`
+        },
+        {
+          workload: 'Power BI report queries (interactive)',
+          type: 'Interactive (NOT smoothed — drives peak)',
+          cuHrDay: interactiveCu,
+          avgCu: interactiveCu,
+          basis: `${concurrent} concurrent users × ${visualsPerReport} visuals × ${visualCuSec} CU-sec/visual × ${renderFactor} render = ${fmt(interactiveCu,2)} CU peak demand`
+        },
+        {
+          workload: 'Paginated reports',
+          type: 'Background',
+          cuHrDay: paginatedCuHrDay,
+          avgCu: paginatedAvgCu,
+          basis: `${paginated} paginated reports × 0.5 CU-hr × complexity ${semanticComplexity} = ${fmt(paginatedCuHrDay,2)} CU-hr`
+        },
       ];
 
-      document.getElementById('kpiData').textContent = fmt(projectedTb,1) + ' TB';
-      document.getElementById('kpiSku').innerHTML = nowSku.sku + ' <span class="pill subtle">' + nowSku.cu + ' CU</span>';
-      document.getElementById('kpiPeak').textContent = fmt(peakCu,1);
-      document.getElementById('kpiSteady').textContent = fmt(steadyCu,1);
+      const totalRow = `<tr><td><strong>Total required</strong></td><td></td><td></td><td><strong>${fmt(rawRequiredCu,2)} CU</strong></td><td>+ ${(n('headroomPct')*100).toFixed(0)}% = <strong>${fmt(withHeadroomCu,1)} CU</strong></td></tr>`;
+      id('proofBody').innerHTML = proofRows.map((r) => `<tr><td>${r.workload}</td><td>${r.type}</td><td>${fmt(r.cuHrDay,2)}</td><td><strong>${fmt(r.avgCu,2)}</strong></td><td>${r.basis}</td></tr>`).join('') + totalRow;
 
-      document.getElementById('workloadTable').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${fmt(r[1],1)}</td><td>${r[2]}</td></tr>`).join('');
-
-      document.getElementById('skuTable').innerHTML = skuMap.map(s => {
-        let cls = 'bad', label='Too small', notes='Would likely throttle during peak periods';
-        if (s.cu >= peakCu) { cls='good'; label='Fits peak'; notes='Meets modeled peak with headroom baked into the estimate'; }
-        else if (s.cu >= steadyCu) { cls='warn'; label='Fits steady only'; notes='May run, but peak windows could smooth/borrow and then throttle'; }
-        if (s.sku === horizonSku.sku && s.sku !== nowSku.sku) notes += '; likely horizon target';
-        return `<tr><td>${s.sku}</td><td>${s.cu}</td><td><span class="pill ${cls}">${label}</span></td><td>${notes}</td></tr>`;
+      const barData = [
+        ['Pipelines (data movement)', pipelineAvgCu, 'c1'],
+        ['Notebooks (Spark)', notebookAvgCu, 'c2'],
+        ['Semantic model refreshes', semanticAvgCu, 'c3'],
+        ['Power BI report queries (interactive)', interactiveCu, 'c4'],
+        ['Paginated reports', paginatedAvgCu, 'c5']
+      ];
+      const maxV = Math.max(...barData.map((d) => d[1]), 0.1);
+      id('bars').innerHTML = barData.map(([name, val, cls]) => {
+        const width = (val / maxV) * 100;
+        return `<div class="bar-row"><div>${name}</div><div class="bar"><span class="${cls}" style="width:${width}%"></span></div><div>${fmt(val,2)}</div></div>`;
       }).join('');
-
-      const thirtySecondBudget = nowSku.cu * 30;
-      const projected30sUse = peakCu * 30;
-      const modeDesc = `${fmt(modeMix.import*100,0)}% Import, ${fmt(modeMix.directLake*100,0)}% Direct Lake, ${fmt(modeMix.directQuery*100,0)}% DirectQuery`;
-      document.getElementById('migrationMixPreview').textContent =
-        `Normalized mix: Pipelines ${fmt(migrationMix.pipelines*100,1)}% · Notebooks ${fmt(migrationMix.notebooks*100,1)}% · Dataflows ${fmt(migrationMix.dataflows*100,1)}% · Mirroring ${fmt(migrationMix.mirroring*100,1)}% · Warehouse ${fmt(migrationMix.warehouse*100,1)}% · Shortcuts ${fmt(migrationMix.shortcuts*100,1)}%`;
-
-      const migrationDesc = `${fmt(migrationMix.pipelines*100,0)}% pipelines, ${fmt(migrationMix.notebooks*100,0)}% notebooks, ${fmt(migrationMix.dataflows*100,0)}% dataflows, ${fmt(migrationMix.mirroring*100,0)}% mirroring, ${fmt(migrationMix.warehouse*100,0)}% warehouse loads, ${fmt(migrationMix.shortcuts*100,0)}% shortcuts`;
-
-      const narrative = `Suggested capacity: ${nowSku.sku} (${nowSku.cu} CU) now, with ${horizonSku.sku} (${horizonSku.cu} CU) as the likely horizon tier.\n\n`
-        + `Why:\n`
-        + `• The estate starts at ${fmt(currentTb < 1 ? currentTb * 1000 : currentTb,1)} ${currentTb < 1 ? 'GB' : 'TB'} and projects to ${fmt(projectedTb < 1 ? projectedTb * 1000 : projectedTb,1)} ${projectedTb < 1 ? 'GB' : 'TB'} over ${horizonYears} year(s) with ${fmt(growthPct*100,1)}% annual growth.\n`
-        + `• Average daily processed data is estimated at ${fmt(dailyProcessedTb,2)} TB/day, coming from ${fmt(dailyChangePct*100,1)}% daily change plus ${fmt(monthlyFullReloadPct*100,1)}% monthly full-reload share.\n`
-        + `• The ETL window is ${fmt(etlWindowHours,1)} hours, so the effective throughput requirement is ${fmt(dailyProcessedTb/etlWindowHours,2)} TB/hour.\n`
-        + `• Migration method mix is ${migrationDesc}. Notebook/Spark-heavy mixes increase CU demand because transformations, joins, and code-driven processing are costlier than low-copy or orchestration-heavy designs.\n`
-        + `• Architecture factors include ${checked('threeLayer') ? 'a 3-layer medallion pattern' : 'a non-medallion pattern'}, ${checked('goldInWarehouse') ? 'gold in Warehouse' : 'no Warehouse gold'}, ${checked('goldInLakehouse') ? 'gold in Lakehouse' : 'no Lakehouse gold'}, and ${objectCount} modeled objects.\n`
-        + `• BI load includes ${semanticModels} semantic models, ${reports} reports, ${peakUsers} peak concurrent users, ${refreshesPerDay} refreshes/day, and storage mode mix of ${modeDesc}.\n`
-        + `• DAX complexity contributes through ${num('daxEasy')} easy, ${num('daxModerate')} moderate, and ${num('daxComplex')} complex measures. Complex measures and DirectQuery increase peak interactive CU demand more sharply than simple Import-based reporting.\n`
-        + `• Optional workloads add ${fmt(realtimeCu*calibration,1)} CU for real-time and ${fmt(mlCu*calibration,1)} CU for ML/data science.\n\n`
-        + `Modeled compute:\n`
-        + `• Steady-state estimate: ${fmt(steadyCu,1)} CU\n`
-        + `• Peak estimate after safety (${fmt((safety-1)*100,0)}%) and burst headroom (${fmt((burst-1)*100,0)}%): ${fmt(peakCu,1)} CU\n`
-        + `• Estimated 30-second peak budget need: ${fmt(projected30sUse,0)} CU-sec versus ${nowSku.sku}'s nominal ${fmt(thirtySecondBudget,0)} CU-sec budget\n\n`
-        + `Interpretation:\n`
-        + `• ${nowSku.sku} is the smallest tier that fits the modeled peak with the chosen safety assumptions.\n`
-        + `• Any smaller tier would likely depend more on smoothing/borrowing during hot periods and could be more vulnerable to throttling during concurrent ETL + report activity.\n`
-        + `• If the pilot shows lower-than-modeled consumption in the Capacity Metrics app, reduce the calibration multiplier. If it shows queueing or throttling, increase it and retest.\n\n`
-        + `Recommendation:\n`
-        + `Use ${nowSku.sku} for initial production sizing, keep autoscale/elastic scaling available during migration waves, and review whether ${horizonSku.sku} is needed as the estate approaches the ${horizonYears}-year target.`;
-      document.getElementById('narrative').textContent = narrative;
-
-      document.getElementById('formulaBlock').textContent =
-        `projectedTB = currentTB × (1 + growth)^years\n`
-        + `dailyProcessedTB = avgTB × dailyChange% + avgTB × monthlyFullReload% / 30\n`
-        + `etlBaseCU ≈ (dailyProcessedTB / ETLhours) × 7.5 × transformComplexity × sourceParallelism × architectureFactor\n`
-        + `steadyCU = ETL + refresh + query + authoring + realtime + ML + metadata\n`
-        + `peakCU = steadyCU × (1 + safetyBuffer) × (1 + burstHeadroom) × calibration\n`
-        + `recommendedSKU = smallest F SKU where CU >= peakCU`;
     }
 
-    function loadExample(type){
-      const set = (id, value, isCheck=false) => isCheck ? document.getElementById(id).checked = value : document.getElementById(id).value = value;
-
-      if(type === 'cu-scenario'){
-        set('currentTb', 10); set('currentDataUnit', 'GB'); set('growthPct', 20); set('horizonYears', 3); set('dailyChangePct', 5); set('monthlyFullReloadPct', 10); set('etlWindowHours', 6);
-        set('pctPipelines', 0); set('pctNotebooks', 40); set('pctDataflows', 60); set('pctMirroring', 0); set('pctWarehouse', 0); set('pctShortcuts', 0);
-        set('bronzeObjects', 10); set('silverObjects', 10); set('goldObjects', 10); set('warehouseObjects', 0);
-        set('goldInWarehouse', false, true); set('goldInLakehouse', true, true); set('threeLayer', true, true); set('cdcEnabled', true, true);
-        set('semanticModels', 2); set('reports', 4); set('peakUsers', 20); set('refreshesPerDay', 2); set('authors', 2); set('queryConcurrency', 1);
-        set('pctImport', 0); set('pctDirectLake', 100); set('pctDirectQuery', 0);
-        set('daxEasy', 10); set('daxModerate', 10); set('daxComplex', 0); set('realtimeLevel', 0); set('mlLevel', 0); set('dsLevel', 0);
-        set('useRealtime', false, true); set('useMl', false, true); set('useRls', false, true); set('useCiCd', true, true);
-        set('safetyPct', 25); set('burstPct', 15); set('calibration', 1); set('transformComplexity', 1); set('sourceParallelism', 1); set('reportIntensity', 1);
-      } else if(type === 'etl-heavy'){
-
-        set('currentTb', 10); set('currentDataUnit', 'TB'); set('growthPct', 22); set('horizonYears', 3); set('dailyChangePct', 7); set('monthlyFullReloadPct', 12); set('etlWindowHours', 5);
-        set('pctPipelines', 25); set('pctNotebooks', 40); set('pctDataflows', 5); set('pctMirroring', 5); set('pctWarehouse', 20); set('pctShortcuts', 5);
-        set('bronzeObjects', 180); set('silverObjects', 130); set('goldObjects', 50); set('warehouseObjects', 45);
-        set('goldInWarehouse', true, true); set('goldInLakehouse', true, true); set('threeLayer', true, true); set('cdcEnabled', true, true);
-        set('semanticModels', 18); set('reports', 50); set('peakUsers', 80); set('refreshesPerDay', 4); set('authors', 14); set('queryConcurrency', 1.2);
-        set('pctImport', 25); set('pctDirectLake', 55); set('pctDirectQuery', 20);
-        set('daxEasy', 150); set('daxModerate', 90); set('daxComplex', 20); set('realtimeLevel', 1); set('mlLevel', 2); set('dsLevel', 2);
-        set('useRealtime', false, true); set('useMl', true, true); set('useRls', true, true); set('useCiCd', true, true);
-        set('safetyPct', 25); set('burstPct', 20); set('calibration', 1); set('transformComplexity', 1.35); set('sourceParallelism', 1.2); set('reportIntensity', 1);
-      } else {
-        set('currentTb', 10); set('currentDataUnit', 'TB'); set('growthPct', 18); set('horizonYears', 3); set('dailyChangePct', 4); set('monthlyFullReloadPct', 6); set('etlWindowHours', 8);
-        set('pctPipelines', 30); set('pctNotebooks', 20); set('pctDataflows', 15); set('pctMirroring', 5); set('pctWarehouse', 20); set('pctShortcuts', 10);
-        set('bronzeObjects', 100); set('silverObjects', 75); set('goldObjects', 55); set('warehouseObjects', 50);
-        set('goldInWarehouse', true, true); set('goldInLakehouse', false, true); set('threeLayer', true, true); set('cdcEnabled', true, true);
-        set('semanticModels', 45); set('reports', 180); set('peakUsers', 400); set('refreshesPerDay', 10); set('authors', 35); set('queryConcurrency', 1.8);
-        set('pctImport', 45); set('pctDirectLake', 35); set('pctDirectQuery', 20);
-        set('daxEasy', 350); set('daxModerate', 260); set('daxComplex', 80); set('realtimeLevel', 2); set('mlLevel', 1); set('dsLevel', 1);
-        set('useRealtime', true, true); set('useMl', false, true); set('useRls', true, true); set('useCiCd', true, true);
-        set('safetyPct', 30); set('burstPct', 20); set('calibration', 1); set('transformComplexity', 1); set('sourceParallelism', 1); set('reportIntensity', 1.3);
-      }
-      calculate();
-    }
-
-    document.querySelectorAll('input, select').forEach((el) => {
-      const eventName = el.type === 'checkbox' ? 'change' : 'input';
-      el.addEventListener(eventName, calculate);
+    document.querySelectorAll('input,select').forEach((el) => {
+      el.addEventListener('input', recalculate);
+      el.addEventListener('change', recalculate);
     });
 
-    calculate();
+    recalculate();
   </script>
 </body>
 </html>
