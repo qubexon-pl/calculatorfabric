@@ -12,6 +12,7 @@
     }
     body {
       background: linear-gradient(180deg, #f8f9ff 0%, #f4f6fa 100%);
+      text-transform: uppercase;
     }
     .hero {
       background: radial-gradient(circle at top right, #8c66ff, var(--brand));
@@ -107,12 +108,14 @@
 
     <div class="card section-card mb-4">
       <div class="card-body">
-        <div class="section-title">Users & Licenses</div>
+        <div class="section-title">Medallion architecture — object counts</div>
         <div class="row g-3">
-          <div class="col-md-6"><label class="form-label">Power BI explorers (readers)</label><input id="explorers" class="form-control" type="number" value="50" min="0"><div class="form-text">View reports only — no Pro license needed on Fabric F SKU.</div></div>
-          <div class="col-md-6"><label class="form-label">Power BI creators (authors)</label><input id="creators" class="form-control" type="number" value="10" min="0"><div class="form-text">Publish & edit — need Pro or PPU license.</div></div>
-          <div class="col-md-6"><label class="form-label">Concurrent peak users (explorers)</label><input id="concurrentUsers" class="form-control" type="number" value="20" min="0"><div class="form-text">How many hit reports at the same time.</div></div>
-          <div class="col-md-6"><label class="form-label">Avg. report open time (seconds)</label><input id="reportOpenSec" class="form-control" type="number" value="10" min="1"><div class="form-text">Time to fully render all visuals.</div></div>
+          <div class="col-md-6"><label class="form-label">Bronze objects</label><input id="bronzeObjects" class="form-control" type="number" value="20" min="0"><div class="form-text">Raw tables/files</div></div>
+          <div class="col-md-6"><label class="form-label">Silver objects</label><input id="silverObjects" class="form-control" type="number" value="15" min="0"><div class="form-text">Cleansed entities</div></div>
+          <div class="col-md-6"><label class="form-label">Gold objects</label><input id="goldObjects" class="form-control" type="number" value="8" min="0"><div class="form-text">Facts + dims</div></div>
+          <div class="col-md-6"><label class="form-label">Bronze data volume (GB)</label><input id="bronzeVolume" class="form-control" type="number" value="50" min="0"></div>
+          <div class="col-md-6"><label class="form-label">% of data transformed in silver</label><input id="silverTransformPct" class="form-control" type="number" value="30" min="0" max="100"></div>
+          <div class="col-md-6"><label class="form-label">Expected growth per month (%)</label><input id="growthMonthPct" class="form-control" type="number" value="10" min="0"></div>
         </div>
       </div>
     </div>
@@ -121,9 +124,6 @@
       <div class="card-body">
         <div class="section-title">Pipelines — data ingestion (bronze layer)</div>
         <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">Number of pipelines</label><input id="pipelines" class="form-control" type="number" value="10" min="0"></div>
-          <div class="col-md-4"><label class="form-label">Data volume per pipeline (GB)</label><input id="pipelineGb" class="form-control" type="number" value="5" min="0"></div>
-          <div class="col-md-4"><label class="form-label">Avg. pipeline duration (min)</label><input id="pipelineMin" class="form-control" type="number" value="30" min="1"></div>
           <div class="col-md-6"><label class="form-label">Source complexity</label>
             <select id="sourceComplexity" class="form-select">
               <option value="8" selected>Simple (flat files, direct DB)</option>
@@ -150,9 +150,7 @@
       <div class="card-body">
         <div class="section-title">Notebooks — Spark transformations</div>
         <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">Number of notebooks</label><input id="notebooks" class="form-control" type="number" value="5" min="0"></div>
-          <div class="col-md-4"><label class="form-label">Avg. notebook duration (min)</label><input id="notebookMin" class="form-control" type="number" value="20" min="1"></div>
-          <div class="col-md-4"><label class="form-label">Spark vCores per notebook</label>
+          <div class="col-md-6"><label class="form-label">Spark vCores</label>
             <select id="sparkVCores" class="form-select">
               <option value="4">4 vCores (small)</option>
               <option value="8" selected>8 vCores (medium)</option>
@@ -160,35 +158,16 @@
               <option value="32">32 vCores (x-large)</option>
             </select>
           </div>
-          <div class="col-md-6"><label class="form-label">Silver transformation complexity</label>
-            <select id="silverComplexity" class="form-select">
-              <option value="1.2">Simple (basic casts, rename)</option>
-              <option value="1.7" selected>Medium (window functions, dedup)</option>
-              <option value="2.3">Complex (many joins + heavy UDF)</option>
-            </select>
-          </div>
-          <div class="col-md-6"><label class="form-label">Gold layer complexity</label>
+          <div class="col-md-6"><label class="form-label">Gold layer process complexity</label>
             <select id="goldComplexity" class="form-select">
-              <option value="1.2">Simple (single fact)</option>
-              <option value="1.7" selected>Medium (multiple fact tables)</option>
-              <option value="2.3">Complex (star + SCD + aggregates)</option>
+              <option value="0.2" selected>Simple (0.2 min / GB)</option>
+              <option value="0.4">Moderate (0.4 min / GB)</option>
+              <option value="1.0">Complex (1.0 min / GB)</option>
             </select>
           </div>
         </div>
         <div class="mt-2 text-secondary" id="notebookBasis"></div>
-      </div>
-    </div>
-
-    <div class="card section-card mb-4">
-      <div class="card-body">
-        <div class="section-title">Medallion architecture — object counts</div>
-        <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">Bronze objects</label><input id="bronzeObjects" class="form-control" type="number" value="20" min="0"><div class="form-text">Raw tables/files</div></div>
-          <div class="col-md-4"><label class="form-label">Silver objects</label><input id="silverObjects" class="form-control" type="number" value="15" min="0"><div class="form-text">Cleansed entities</div></div>
-          <div class="col-md-4"><label class="form-label">Gold objects</label><input id="goldObjects" class="form-control" type="number" value="8" min="0"><div class="form-text">Facts + dims</div></div>
-          <div class="col-md-6"><label class="form-label">Bronze data volume (GB)</label><input id="bronzeVolume" class="form-control" type="number" value="50" min="0"></div>
-          <div class="col-md-6"><label class="form-label">Expected growth per month (%)</label><input id="growthMonthPct" class="form-control" type="number" value="10" min="0"></div>
-        </div>
+        <div class="mt-2 text-secondary" id="goldBasis"></div>
       </div>
     </div>
 
@@ -224,6 +203,18 @@
             </select>
           </div>
           <div class="col-md-6"><label class="form-label">Avg. model refresh duration (min)</label><input id="refreshMin" class="form-control" type="number" value="15" min="1"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section-card mb-4">
+      <div class="card-body">
+        <div class="section-title">Users & Licenses</div>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Power BI explorers (readers)</label><input id="explorers" class="form-control" type="number" value="50" min="0"><div class="form-text">View reports only — no Pro license needed on Fabric F SKU.</div></div>
+          <div class="col-md-6"><label class="form-label">Power BI creators (authors)</label><input id="creators" class="form-control" type="number" value="10" min="0"><div class="form-text">Publish & edit — need Pro or PPU license.</div></div>
+          <div class="col-md-6"><label class="form-label">Concurrent peak users (explorers)</label><input id="concurrentUsers" class="form-control" type="number" value="20" min="0"><div class="form-text">How many hit reports at the same time.</div></div>
+          <div class="col-md-6"><label class="form-label">Avg. report open time (seconds)</label><input id="reportOpenSec" class="form-control" type="number" value="10" min="1"><div class="form-text">Time to fully render all visuals.</div></div>
         </div>
       </div>
     </div>
@@ -312,7 +303,7 @@
     const n = (name) => parseFloat(id(name).value || 0);
     const fmt = (value, digits = 2) => Number(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-    const NETWORK_MIN_PER_GB = 2;
+    const BRONZE_MIN_PER_GB_DIVISOR = 2;
 
     function pickSku(required) {
       const level = skuLevels.find((v) => required <= v) || skuLevels[skuLevels.length - 1];
@@ -320,32 +311,37 @@
     }
 
     function recalculate() {
-      const pipelines = n('pipelines');
-      const pipelineMinInput = Math.max(1, n('pipelineMin'));
-      const pipelineGb = Math.max(0, n('pipelineGb'));
+      const bronzeVolume = Math.max(0, n('bronzeVolume'));
+      const silverTransformPct = Math.min(100, Math.max(0, n('silverTransformPct')));
+      const silverRatio = silverTransformPct / 100;
+      const silverGb = bronzeVolume * silverRatio;
+      const passthroughGb = bronzeVolume - silverGb;
+      const bronzeLoadMin = bronzeVolume / BRONZE_MIN_PER_GB_DIVISOR;
+      const silverNotebookMin = (silverGb * 1) + (passthroughGb * 0.1);
+      const goldObjects = Math.max(0, n('goldObjects'));
+      const safeGoldObjects = Math.max(1, goldObjects);
+      const goldMinPerGb = n('goldComplexity');
+      const gbPerGoldObject = goldObjects > 0 ? bronzeVolume / goldObjects : 0;
+      const goldPerObjectMin = gbPerGoldObject * goldMinPerGb;
+      const goldTotalMin = goldPerObjectMin * goldObjects;
+      const notebookRunMin = silverNotebookMin + goldTotalMin;
       const ito = n('sourceComplexity');
       const pipelineRuns = n('pipelineSchedule');
-      const networkLoadMin = pipelineGb * NETWORK_MIN_PER_GB;
-      const effectivePipelineMin = Math.max(pipelineMinInput, networkLoadMin);
-      const pipelineHours = effectivePipelineMin / 60;
-      const pipelineCuHrDay = pipelines * 1.5 * ito * pipelineHours * pipelineRuns;
+      const pipelineHours = bronzeLoadMin / 60;
+      const pipelineCuHrDay = 1.5 * ito * pipelineHours * pipelineRuns;
       const pipelineAvgCu = pipelineCuHrDay / 24;
 
-      const notebooks = n('notebooks');
-      const notebookMin = Math.max(1, n('notebookMin'));
       const vcores = n('sparkVCores');
-      const nbComplexity = (n('silverComplexity') + n('goldComplexity')) / 2;
       const notebookRuns = pipelineRuns;
-      const notebookCuHrRun = (vcores / 2) * (notebookMin / 60) * nbComplexity;
-      const notebookCuHrDay = notebooks * notebookCuHrRun * notebookRuns;
+      const notebookCuHrRun = (vcores / 2) * (notebookRunMin / 60);
+      const notebookCuHrDay = notebookCuHrRun * notebookRuns;
       const notebookAvgCu = notebookCuHrDay / 24;
 
       const semanticModels = n('semanticModels');
       const semanticComplexity = n('semanticComplexity');
       const refreshMinInput = Math.max(1, n('refreshMin'));
-      const bronzeVolume = Math.max(0, n('bronzeVolume'));
       const dataPerModelGb = semanticModels > 0 ? bronzeVolume / semanticModels : 0;
-      const refreshLoadMin = dataPerModelGb * NETWORK_MIN_PER_GB;
+      const refreshLoadMin = dataPerModelGb * BRONZE_MIN_PER_GB_DIVISOR;
       const effectiveRefreshMin = Math.max(refreshMinInput, refreshLoadMin);
       const refreshesPerDay = n('refreshFrequency');
       const semanticCuHrRefresh = (effectiveRefreshMin / 60) * 2 * semanticComplexity;
@@ -372,9 +368,10 @@
       const recommended = pickSku(withHeadroomCu);
       const utilization = (rawRequiredCu / recommended.cu) * 100;
 
-      id('loadingTimeBasis').textContent = `Network-aware loading assumption: 1 GB ≈ ${NETWORK_MIN_PER_GB} minutes on a good network. For pipelines, ${fmt(pipelineGb,1)} GB implies ${fmt(networkLoadMin,1)} min transfer time per run; effective duration used in CU estimation is max(${fmt(pipelineMinInput,1)}, ${fmt(networkLoadMin,1)}) = ${fmt(effectivePipelineMin,1)} min.`;
-      id('pipelineBasis').textContent = `${pipelines} pipelines × ${fmt(effectivePipelineMin,1)}min effective runtime × ITO factor ${ito} × 1.5 CU-hr rate × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay, 1)} CU-hr/day`;
-      id('notebookBasis').textContent = `${notebooks} notebooks × ${vcores} vCores ÷ 2 = ${(vcores/2).toFixed(0)} CUs × ${notebookMin}min ÷ 60 × complexity ${fmt(nbComplexity, 1)} = ${fmt(notebookCuHrRun, 2)} CU-hr/run × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(notebookCuHrDay, 1)} CU-hr/day`;
+      id('loadingTimeBasis').textContent = `Bronze loading formula: Bronze data volume ÷ ${BRONZE_MIN_PER_GB_DIVISOR}. For ${fmt(bronzeVolume,1)} GB, Bronze loading time = ${fmt(bronzeLoadMin,1)} minutes per run.`;
+      id('pipelineBasis').textContent = `Bronze loading CU basis: ${fmt(bronzeLoadMin,1)}min × ITO factor ${ito} × 1.5 CU-hr rate × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay, 1)} CU-hr/day`;
+      id('notebookBasis').textContent = `Silver notebook runtime: ${fmt(silverGb,1)} GB × 1 min/GB + ${fmt(passthroughGb,1)} GB × 0.1 min/GB = ${fmt(silverNotebookMin,1)} minutes. Combined notebook runtime per run (Silver + Gold) = ${fmt(notebookRunMin,1)} minutes.`;
+      id('goldBasis').textContent = `Gold runtime: ${fmt(bronzeVolume,1)} GB ÷ ${safeGoldObjects} objects = ${fmt(gbPerGoldObject,2)} GB/object × ${fmt(goldMinPerGb,1)} min/GB = ${fmt(goldPerObjectMin,2)} min/object. Total for ${goldObjects} objects = ${fmt(goldTotalMin,2)} minutes.`;
 
       id('skuRec').textContent = recommended.sku;
       id('skuRecSub').textContent = `${recommended.cu} Capacity Units`;
@@ -395,21 +392,21 @@
           type: 'Background (smoothed 24h)',
           cuHrDay: pipelineCuHrDay,
           avgCu: pipelineAvgCu,
-          basis: `${pipelines} pipelines × ${fmt(effectivePipelineMin,1)}min effective duration (volume-aware) × ITO factor ${ito} × 1.5 × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay,1)} CU-hr/day`
+          basis: `Bronze load ${fmt(bronzeVolume,1)}GB ÷ ${BRONZE_MIN_PER_GB_DIVISOR} = ${fmt(bronzeLoadMin,1)}min × ITO factor ${ito} × 1.5 × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay,1)} CU-hr/day`
         },
         {
           workload: 'Notebooks (Spark)',
           type: 'Background (smoothed 24h)',
           cuHrDay: notebookCuHrDay,
           avgCu: notebookAvgCu,
-          basis: `${notebooks} notebooks × ${vcores} vCores ÷ 2 × ${notebookMin}min ÷ 60 × complexity ${fmt(nbComplexity,1)} × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(notebookCuHrDay,1)} CU-hr/day`
+          basis: `${vcores} vCores ÷ 2 × (${fmt(silverNotebookMin,1)}min Silver + ${fmt(goldTotalMin,1)}min Gold) ÷ 60 × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(notebookCuHrDay,1)} CU-hr/day`
         },
         {
           workload: 'Semantic model refreshes',
           type: 'Background (smoothed 24h)',
           cuHrDay: semanticCuHrDay,
           avgCu: semanticAvgCu,
-          basis: `${semanticModels} models × ${fmt(effectiveRefreshMin,1)}min effective refresh (includes ${fmt(dataPerModelGb,1)}GB/model × 2min/GB load factor) ÷ 60 × 2 CU-hr/hr × complexity ${semanticComplexity} × ${refreshesPerDay} refreshes/day = ${fmt(semanticCuHrDay,1)} CU-hr/day`
+          basis: `${semanticModels} models × ${fmt(effectiveRefreshMin,1)}min effective refresh (includes ${fmt(dataPerModelGb,1)}GB/model × ${BRONZE_MIN_PER_GB_DIVISOR}min/GB load factor) ÷ 60 × 2 CU-hr/hr × complexity ${semanticComplexity} × ${refreshesPerDay} refreshes/day = ${fmt(semanticCuHrDay,1)} CU-hr/day`
         },
         {
           workload: 'Power BI report queries (interactive)',
