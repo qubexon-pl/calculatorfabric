@@ -12,7 +12,8 @@
     }
     body {
       background: linear-gradient(180deg, #f8f9ff 0%, #f4f6fa 100%);
-      text-transform: uppercase;
+      font-family: Aptos, "Aptos Display", "Segoe UI", Arial, sans-serif;
+      text-transform: none;
     }
     .hero {
       background: radial-gradient(circle at top right, #8c66ff, var(--brand));
@@ -21,7 +22,7 @@
       box-shadow: 0 10px 35px rgba(91, 43, 224, 0.3);
     }
     .page-shell {
-      width: min(80%, 1400px);
+      width: min(96%, 1800px);
       margin: 0 auto;
     }
     .inputs-col .section-card {
@@ -64,7 +65,16 @@
     }
     .metric-sub {
       color: #4b5563;
-      font-size: .9rem;
+      font-size: .78rem;
+      line-height: 1.25;
+    }
+    .small-note,
+    .form-text,
+    .legend-box,
+    .loading-note {
+      font-size: .78rem;
+      line-height: 1.25;
+      text-transform: none;
     }
     .table thead th {
       white-space: nowrap;
@@ -81,11 +91,12 @@
     }
     .bar-row {
       display: grid;
-      grid-template-columns: 260px 1fr 90px;
+      grid-template-columns: minmax(170px, 250px) 1fr 80px;
       gap: .75rem;
       align-items: center;
       margin-bottom: .55rem;
-      font-size: .95rem;
+      font-size: .85rem;
+      overflow-wrap: anywhere;
     }
     .bar-track {
       height: 1.1rem;
@@ -164,8 +175,8 @@
             </select>
           </div>
         </div>
-        <div class="loading-note mt-3" id="loadingTimeBasis"></div>
-        <div class="mt-2 text-secondary" id="pipelineBasis"></div>
+        <div class="loading-note mt-3 small-note" id="loadingTimeBasis"></div>
+        <div class="mt-2 text-secondary small-note" id="pipelineBasis"></div>
       </div>
     </div>
 
@@ -189,8 +200,8 @@
             </select>
           </div>
         </div>
-        <div class="mt-2 text-secondary" id="notebookBasis"></div>
-        <div class="mt-2 text-secondary" id="goldBasis"></div>
+        <div class="mt-2 text-secondary small-note" id="notebookBasis"></div>
+        <div class="mt-2 text-secondary small-note" id="goldBasis"></div>
       </div>
     </div>
 
@@ -284,19 +295,17 @@
 
       <div class="col-lg-4 summary-col">
         <div class="summary-stack">
-    <div class="row g-3 mb-4">
-      <div class="col-12"><div class="metric-card p-3 h-100"><div class="metric-label">Recommended SKU</div><div class="metric-value" id="skuRec">F8</div><div class="metric-sub" id="skuRecSub">8 Capacity Units</div></div></div>
-      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Required CU (raw)</div><div class="metric-value" id="requiredRaw">0.0</div><div class="metric-sub">CU</div></div></div>
-      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">With headroom</div><div class="metric-value" id="requiredHeadroom">0.0</div><div class="metric-sub">CU needed</div></div></div>
-      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Utilization (avg)</div><div class="metric-value" id="utilization">0%</div><div class="metric-sub" id="utilSub">of F8</div></div></div>
-      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Peak interactive</div><div class="metric-value" id="peakInteractive">0.0</div><div class="metric-sub">CU (instant)</div></div></div>
-    </div>
-
-    <div class="card section-card mb-4 floating-tier">
-      <div class="card-body text-center">
-        <div class="metric-label">Minimum fitting tier</div>
-        <div class="metric-value" id="skuMin">F2</div>
-        <div class="metric-sub" id="skuMinSub">2 CU</div>
+        <div class="card section-card mb-4 floating-tier">
+      <div class="card-body">
+        <div class="section-title mb-3">Recommended SKU summary</div>
+        <div class="row g-3">
+          <div class="col-12"><div class="metric-card p-3 h-100"><div class="metric-label">Recommended SKU</div><div class="metric-value" id="skuRec">F8</div><div class="metric-sub" id="skuRecSub">8 Capacity Units • 0% utilized avg</div></div></div>
+          <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Required CU (raw)</div><div class="metric-value" id="requiredRaw">0.0</div><div class="metric-sub">Average capacity demand</div></div></div>
+          <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">With headroom</div><div class="metric-value" id="requiredHeadroom">0.0</div><div class="metric-sub">Headroom-adjusted capacity</div></div></div>
+          <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Utilization (avg)</div><div class="metric-value" id="utilization">0%</div><div class="metric-sub" id="utilSub">of F8 baseline</div></div></div>
+          <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Peak interactive</div><div class="metric-value" id="peakInteractive">0.0</div><div class="metric-sub">Instantaneous CU demand</div></div></div>
+          <div class="col-12"><div class="metric-card p-3 h-100"><div class="metric-label">Minimum fitting tier</div><div class="metric-value" id="skuMin">F2</div><div class="metric-sub" id="skuMinSub">2 CU</div></div></div>
+        </div>
       </div>
     </div>
 
@@ -313,8 +322,8 @@
             <tbody id="proofBody"></tbody>
           </table>
         </div>
-        <div class="legend-box">Background workloads (pipelines, notebooks, refreshes) are smoothed by Fabric over a 24-hour window.</div>
-        <div class="legend-box">Interactive operations (Power BI queries) are not smoothed and must fit instantaneous CU ceiling.</div>
+        <div class="legend-box small-note">Background workloads (pipelines, notebooks, refreshes) are smoothed by Fabric over a 24-hour window.</div>
+        <div class="legend-box small-note">Interactive operations (Power BI queries) are not smoothed and must fit instantaneous CU ceiling.</div>
       </div>
     </div>
 
@@ -325,13 +334,6 @@
       </div>
     </div>
 
-    <div class="card section-card mb-4">
-      <div class="card-body text-center">
-        <div class="metric-label">Recommended</div>
-        <div class="metric-value" id="skuRecommended">F8</div>
-        <div class="metric-sub" id="skuRecommendedSub">57% utilized</div>
-      </div>
-    </div>
         </div>
       </div>
     </div>
@@ -414,17 +416,15 @@
       id('goldBasis').textContent = `Gold runtime: ${fmt(bronzeVolume,1)} GB ÷ ${safeGoldObjects} objects = ${fmt(gbPerGoldObject,2)} GB/object × ${fmt(goldMinPerGb,1)} min/GB = ${fmt(goldPerObjectMin,2)} min/object. Total for ${goldObjects} objects = ${fmt(goldTotalMin,2)} minutes.`;
 
       id('skuRec').textContent = recommended.sku;
-      id('skuRecSub').textContent = `${recommended.cu} Capacity Units`;
       id('requiredRaw').textContent = fmt(rawRequiredCu, 1);
       id('requiredHeadroom').textContent = fmt(withHeadroomCu, 1);
       id('utilization').textContent = `${fmt(utilization, 0)}%`;
       id('utilSub').textContent = `of ${recommended.sku}`;
       id('peakInteractive').textContent = fmt(interactiveCu, 2);
+      id('skuRecSub').textContent = `${recommended.cu} Capacity Units • ${fmt(utilization, 0)}% utilized avg`;
 
       id('skuMin').textContent = minSku.sku;
       id('skuMinSub').textContent = `${minSku.cu} CU`;
-      id('skuRecommended').textContent = recommended.sku;
-      id('skuRecommendedSub').textContent = `${fmt(utilization, 0)}% utilized`;
 
       const proofRows = [
         {
