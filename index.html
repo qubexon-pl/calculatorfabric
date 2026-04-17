@@ -20,6 +20,17 @@
       border-radius: 1rem;
       box-shadow: 0 10px 35px rgba(91, 43, 224, 0.3);
     }
+    .page-shell {
+      width: min(80%, 1400px);
+      margin: 0 auto;
+    }
+    .inputs-col .section-card {
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .summary-col .summary-stack {
+      position: sticky;
+      top: 1.25rem;
+    }
     .section-card {
       border: 0;
       border-radius: 1rem;
@@ -92,20 +103,32 @@
       padding: .75rem .9rem;
       color: #7c2d12;
     }
+    .floating-tier {
+      border: 2px solid var(--brand);
+      box-shadow: 0 12px 26px rgba(91, 43, 224, 0.18);
+    }
     @media (max-width: 991px) {
+      .page-shell {
+        width: 100%;
+      }
       .bar-row {
         grid-template-columns: 1fr;
+      }
+      .summary-col .summary-stack {
+        position: static;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container py-4 py-lg-5">
+  <div class="container py-4 py-lg-5 page-shell">
     <div class="hero p-4 p-lg-5 mb-4">
       <h1 class="display-6 fw-bold mb-2">Microsoft Fabric Capacity Tier Calculator</h1>
       <p class="mb-0 opacity-75">Interactive estimator for required F-SKU based on ingestion, Spark, semantic refresh, and BI concurrency patterns.</p>
     </div>
 
+    <div class="row g-4 align-items-start">
+      <div class="col-lg-8 inputs-col">
     <div class="card section-card mb-4">
       <div class="card-body">
         <div class="section-title">Medallion architecture — object counts</div>
@@ -257,13 +280,24 @@
         </div>
       </div>
     </div>
+      </div>
 
+      <div class="col-lg-4 summary-col">
+        <div class="summary-stack">
     <div class="row g-3 mb-4">
-      <div class="col-md-6 col-lg"><div class="metric-card p-3 h-100"><div class="metric-label">Recommended SKU</div><div class="metric-value" id="skuRec">F8</div><div class="metric-sub" id="skuRecSub">8 Capacity Units</div></div></div>
-      <div class="col-md-6 col-lg"><div class="metric-card p-3 h-100"><div class="metric-label">Required CU (raw)</div><div class="metric-value" id="requiredRaw">0.0</div><div class="metric-sub">CU</div></div></div>
-      <div class="col-md-6 col-lg"><div class="metric-card p-3 h-100"><div class="metric-label">With headroom</div><div class="metric-value" id="requiredHeadroom">0.0</div><div class="metric-sub">CU needed</div></div></div>
-      <div class="col-md-6 col-lg"><div class="metric-card p-3 h-100"><div class="metric-label">Utilization (avg)</div><div class="metric-value" id="utilization">0%</div><div class="metric-sub" id="utilSub">of F8</div></div></div>
-      <div class="col-md-6 col-lg"><div class="metric-card p-3 h-100"><div class="metric-label">Peak interactive</div><div class="metric-value" id="peakInteractive">0.0</div><div class="metric-sub">CU (instant)</div></div></div>
+      <div class="col-12"><div class="metric-card p-3 h-100"><div class="metric-label">Recommended SKU</div><div class="metric-value" id="skuRec">F8</div><div class="metric-sub" id="skuRecSub">8 Capacity Units</div></div></div>
+      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Required CU (raw)</div><div class="metric-value" id="requiredRaw">0.0</div><div class="metric-sub">CU</div></div></div>
+      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">With headroom</div><div class="metric-value" id="requiredHeadroom">0.0</div><div class="metric-sub">CU needed</div></div></div>
+      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Utilization (avg)</div><div class="metric-value" id="utilization">0%</div><div class="metric-sub" id="utilSub">of F8</div></div></div>
+      <div class="col-6"><div class="metric-card p-3 h-100"><div class="metric-label">Peak interactive</div><div class="metric-value" id="peakInteractive">0.0</div><div class="metric-sub">CU (instant)</div></div></div>
+    </div>
+
+    <div class="card section-card mb-4 floating-tier">
+      <div class="card-body text-center">
+        <div class="metric-label">Minimum fitting tier</div>
+        <div class="metric-value" id="skuMin">F2</div>
+        <div class="metric-sub" id="skuMinSub">2 CU</div>
+      </div>
     </div>
 
     <div class="card section-card mb-4">
@@ -291,9 +325,15 @@
       </div>
     </div>
 
-    <div class="row g-3 mb-4">
-      <div class="col-md-6"><div class="metric-card p-3 text-center"><div class="metric-label">Minimum fitting tier</div><div class="metric-value" id="skuMin">F2</div><div class="metric-sub" id="skuMinSub">2 CU</div></div></div>
-      <div class="col-md-6"><div class="metric-card p-3 text-center"><div class="metric-label">Recommended</div><div class="metric-value" id="skuRecommended">F8</div><div class="metric-sub" id="skuRecommendedSub">57% utilized</div></div></div>
+    <div class="card section-card mb-4">
+      <div class="card-body text-center">
+        <div class="metric-label">Recommended</div>
+        <div class="metric-value" id="skuRecommended">F8</div>
+        <div class="metric-sub" id="skuRecommendedSub">57% utilized</div>
+      </div>
+    </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -303,7 +343,7 @@
     const n = (name) => parseFloat(id(name).value || 0);
     const fmt = (value, digits = 2) => Number(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-    const BRONZE_MIN_PER_GB_DIVISOR = 2;
+    const BRONZE_MIN_PER_GB = 2;
 
     function pickSku(required) {
       const level = skuLevels.find((v) => required <= v) || skuLevels[skuLevels.length - 1];
@@ -316,7 +356,7 @@
       const silverRatio = silverTransformPct / 100;
       const silverGb = bronzeVolume * silverRatio;
       const passthroughGb = bronzeVolume - silverGb;
-      const bronzeLoadMin = bronzeVolume / BRONZE_MIN_PER_GB_DIVISOR;
+      const bronzeLoadMin = bronzeVolume * BRONZE_MIN_PER_GB;
       const silverNotebookMin = (silverGb * 1) + (passthroughGb * 0.1);
       const goldObjects = Math.max(0, n('goldObjects'));
       const safeGoldObjects = Math.max(1, goldObjects);
@@ -341,7 +381,7 @@
       const semanticComplexity = n('semanticComplexity');
       const refreshMinInput = Math.max(1, n('refreshMin'));
       const dataPerModelGb = semanticModels > 0 ? bronzeVolume / semanticModels : 0;
-      const refreshLoadMin = dataPerModelGb * BRONZE_MIN_PER_GB_DIVISOR;
+      const refreshLoadMin = dataPerModelGb * BRONZE_MIN_PER_GB;
       const effectiveRefreshMin = Math.max(refreshMinInput, refreshLoadMin);
       const refreshesPerDay = n('refreshFrequency');
       const semanticCuHrRefresh = (effectiveRefreshMin / 60) * 2 * semanticComplexity;
@@ -368,7 +408,7 @@
       const recommended = pickSku(withHeadroomCu);
       const utilization = (rawRequiredCu / recommended.cu) * 100;
 
-      id('loadingTimeBasis').textContent = `Bronze loading formula: Bronze data volume ÷ ${BRONZE_MIN_PER_GB_DIVISOR}. For ${fmt(bronzeVolume,1)} GB, Bronze loading time = ${fmt(bronzeLoadMin,1)} minutes per run.`;
+      id('loadingTimeBasis').textContent = `Bronze loading formula: Bronze data volume × ${BRONZE_MIN_PER_GB} min/GB. For ${fmt(bronzeVolume,1)} GB, Bronze loading time = ${fmt(bronzeLoadMin,1)} minutes per run.`;
       id('pipelineBasis').textContent = `Bronze loading CU basis: ${fmt(bronzeLoadMin,1)}min × ITO factor ${ito} × 1.5 CU-hr rate × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay, 1)} CU-hr/day`;
       id('notebookBasis').textContent = `Silver notebook runtime: ${fmt(silverGb,1)} GB × 1 min/GB + ${fmt(passthroughGb,1)} GB × 0.1 min/GB = ${fmt(silverNotebookMin,1)} minutes. Combined notebook runtime per run (Silver + Gold) = ${fmt(notebookRunMin,1)} minutes.`;
       id('goldBasis').textContent = `Gold runtime: ${fmt(bronzeVolume,1)} GB ÷ ${safeGoldObjects} objects = ${fmt(gbPerGoldObject,2)} GB/object × ${fmt(goldMinPerGb,1)} min/GB = ${fmt(goldPerObjectMin,2)} min/object. Total for ${goldObjects} objects = ${fmt(goldTotalMin,2)} minutes.`;
@@ -392,7 +432,7 @@
           type: 'Background (smoothed 24h)',
           cuHrDay: pipelineCuHrDay,
           avgCu: pipelineAvgCu,
-          basis: `Bronze load ${fmt(bronzeVolume,1)}GB ÷ ${BRONZE_MIN_PER_GB_DIVISOR} = ${fmt(bronzeLoadMin,1)}min × ITO factor ${ito} × 1.5 × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay,1)} CU-hr/day`
+          basis: `Bronze load ${fmt(bronzeVolume,1)}GB × ${BRONZE_MIN_PER_GB} min/GB = ${fmt(bronzeLoadMin,1)}min × ITO factor ${ito} × 1.5 × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay,1)} CU-hr/day`
         },
         {
           workload: 'Notebooks (Spark)',
@@ -406,7 +446,7 @@
           type: 'Background (smoothed 24h)',
           cuHrDay: semanticCuHrDay,
           avgCu: semanticAvgCu,
-          basis: `${semanticModels} models × ${fmt(effectiveRefreshMin,1)}min effective refresh (includes ${fmt(dataPerModelGb,1)}GB/model × ${BRONZE_MIN_PER_GB_DIVISOR}min/GB load factor) ÷ 60 × 2 CU-hr/hr × complexity ${semanticComplexity} × ${refreshesPerDay} refreshes/day = ${fmt(semanticCuHrDay,1)} CU-hr/day`
+          basis: `${semanticModels} models × ${fmt(effectiveRefreshMin,1)}min effective refresh (includes ${fmt(dataPerModelGb,1)}GB/model × ${BRONZE_MIN_PER_GB}min/GB load factor) ÷ 60 × 2 CU-hr/hr × complexity ${semanticComplexity} × ${refreshesPerDay} refreshes/day = ${fmt(semanticCuHrDay,1)} CU-hr/day`
         },
         {
           workload: 'Power BI report queries (interactive)',
