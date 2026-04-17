@@ -29,8 +29,7 @@
       background: rgba(255, 255, 255, 0.95);
     }
     .summary-col .summary-stack {
-      position: sticky;
-      top: 1.25rem;
+      position: static;
     }
     .section-card {
       border: 0;
@@ -82,6 +81,15 @@
       text-transform: uppercase;
       color: #6b7280;
     }
+    .proof-table {
+      font-size: .76rem;
+    }
+    .proof-table thead th {
+      font-size: .7rem;
+    }
+    .proof-table td {
+      line-height: 1.25;
+    }
     .legend-box {
       background: var(--brand-soft);
       border-left: 4px solid var(--brand);
@@ -118,6 +126,11 @@
       border: 2px solid var(--brand);
       box-shadow: 0 12px 26px rgba(91, 43, 224, 0.18);
     }
+    .floating-sku-sticky {
+      position: sticky;
+      top: 1rem;
+      z-index: 10;
+    }
     @media (max-width: 991px) {
       .page-shell {
         width: 100%;
@@ -139,7 +152,7 @@
     </div>
 
     <div class="row g-4 align-items-start">
-      <div class="col-lg-8 inputs-col">
+      <div class="col-lg-7 inputs-col">
     <div class="card section-card mb-4">
       <div class="card-body">
         <div class="section-title">Medallion architecture — object counts</div>
@@ -293,9 +306,9 @@
     </div>
       </div>
 
-      <div class="col-lg-4 summary-col">
+      <div class="col-lg-5 summary-col">
         <div class="summary-stack">
-        <div class="card section-card mb-4 floating-tier">
+        <div class="card section-card mb-4 floating-tier floating-sku-sticky">
       <div class="card-body">
         <div class="section-title mb-3">Recommended SKU summary</div>
         <div class="row g-3">
@@ -313,7 +326,7 @@
       <div class="card-body">
         <div class="section-title">Workload breakdown — CU proof table</div>
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover align-middle proof-table">
             <thead>
               <tr>
                 <th>Workload</th><th>Type</th><th>CU-hr/day</th><th>Avg CU (smoothed)</th><th>Calculation basis</th>
