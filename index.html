@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Microsoft Fabric Capacity Tier Calculator</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <style>
     :root {
       --brand: #5b2be0;
@@ -140,6 +141,14 @@
     <div class="hero p-4 p-lg-5 mb-4">
       <h1 class="display-6 fw-bold mb-2">Microsoft Fabric Capacity Tier Calculator</h1>
       <p class="mb-0 opacity-75">Interactive estimator for required F-SKU based on ingestion, Spark, semantic refresh, and BI concurrency patterns.</p>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button class="btn btn-light btn-sm fw-semibold" id="saveJsonBtn">Save to JSON</button>
+        <label class="btn btn-outline-light btn-sm fw-semibold mb-0">
+          Import from JSON
+          <input id="importJsonInput" type="file" accept="application/json" hidden>
+        </label>
+        <button class="btn btn-warning btn-sm fw-semibold" id="exportPdfBtn">Export PDF</button>
+      </div>
     </div>
 
     <div class="row g-4 align-items-start">
@@ -349,6 +358,7 @@
     const id = (name) => document.getElementById(name);
     const n = (name) => parseFloat(id(name).value || 0);
     const fmt = (value, digits = 2) => Number(value).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    const formFieldIds = Array.from(document.querySelectorAll('input,select')).map((el) => el.id).filter(Boolean);
 
     const BRONZE_MIN_PER_GB = 2;
 
@@ -499,10 +509,156 @@
       }).join('');
     }
 
+    function collectState() {
+      const values = {};
+      formFieldIds.forEach((fieldId) => {
+        values[fieldId] = id(fieldId).value;
+      });
+      return {
+        exportedAtUtc: new Date().toISOString(),
+        app: "Microsoft Fabric Capacity Tier Calculator",
+        values
+      };
+    }
+
+    function applyState(state) {
+      if (!state || !state.values || typeof state.values !== 'object') {
+        throw new Error('Invalid JSON format.');
+      }
+      formFieldIds.forEach((fieldId) => {
+        if (Object.prototype.hasOwnProperty.call(state.values, fieldId)) {
+          id(fieldId).value = state.values[fieldId];
+        }
+      });
+      recalculate();
+    }
+
+    function downloadJson() {
+      const payload = collectState();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      a.href = url;
+      a.download = `fabric-capacity-calculation-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function exportPdf() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const left = 40;
+      const topStart = 50;
+      const lineH = 16;
+      const pageBottom = 790;
+      let y = topStart;
+
+      const addWrapped = (text, indent = 0) => {
+        const maxWidth = 515 - indent;
+        const lines = doc.splitTextToSize(text, maxWidth);
+        lines.forEach((line) => {
+          if (y > pageBottom) {
+            doc.addPage();
+            y = topStart;
+          }
+          doc.text(line, left + indent, y);
+          y += lineH;
+        });
+      };
+
+      const addSection = (title, bodyLines) => {
+        doc.setFont("helvetica", "bold");
+        addWrapped(title);
+        doc.setFont("helvetica", "normal");
+        bodyLines.forEach((line) => addWrapped(`• ${line}`, 10));
+        y += 8;
+      };
+
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      addWrapped("Microsoft Fabric Capacity Tier Calculator — Export");
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      addWrapped(`Generated: ${new Date().toISOString()}`);
+      y += 10;
+
+      addSection("Recommended SKU summary", [
+        `Recommended SKU: ${id('skuRec').textContent}`,
+        `Required CU (raw): ${id('requiredRaw').textContent}`,
+        `Required CU with headroom: ${id('requiredHeadroom').textContent}`,
+        `Utilization: ${id('utilization').textContent}`,
+        `Peak interactive CU: ${id('peakInteractive').textContent}`,
+        `Minimum fitting tier: ${id('skuMin').textContent}`
+      ]);
+      addSection("Workload breakdown — CU proof table", Array.from(id('proofBody').querySelectorAll('tr')).map((tr) => tr.innerText.replace(/\s+/g, ' ').trim()));
+      addSection("Medallion architecture — object counts", [
+        `Bronze objects: ${id('bronzeObjects').value}`,
+        `Silver objects: ${id('silverObjects').value}`,
+        `Gold objects: ${id('goldObjects').value}`,
+        `Bronze volume (GB): ${id('bronzeVolume').value}`,
+        `Silver transform (%): ${id('silverTransformPct').value}`,
+        `Monthly growth (%): ${id('growthMonthPct').value}`
+      ]);
+      addSection("Pipelines — data ingestion (bronze layer)", [
+        `Source complexity factor: ${id('sourceComplexity').value}`,
+        `Run schedule/day: ${id('pipelineSchedule').value}`,
+        id('loadingTimeBasis').textContent,
+        id('pipelineBasis').textContent
+      ]);
+      addSection("Notebooks — Spark transformations", [
+        `Spark vCores: ${id('sparkVCores').value}`,
+        `Gold complexity (min/GB): ${id('goldComplexity').value}`,
+        id('notebookBasis').textContent,
+        id('goldBasis').textContent
+      ]);
+      addSection("Semantic models & Power BI reports", [
+        `Semantic models: ${id('semanticModels').value}`,
+        `Power BI reports: ${id('pbireports').value}`,
+        `Paginated reports: ${id('paginatedReports').value}`,
+        `Semantic complexity factor: ${id('semanticComplexity').value}`,
+        `Report complexity visuals: ${id('reportComplexity').value}`,
+        `Refreshes/day: ${id('refreshFrequency').value}`,
+        `Avg refresh duration (min): ${id('refreshMin').value}`
+      ]);
+      addSection("Users & Licenses", [
+        `Explorers: ${id('explorers').value}`,
+        `Creators: ${id('creators').value}`,
+        `Concurrent users: ${id('concurrentUsers').value}`,
+        `Report open time (sec): ${id('reportOpenSec').value}`
+      ]);
+      addSection("Advanced workloads", [
+        `Realtime factor: ${id('realtime').value}`,
+        `ML use cases: ${id('mlUseCases').value}`,
+        `ML complexity: ${id('mlComplexity').value}`,
+        `Dataflows factor: ${id('dataflows').value}`,
+        `Safety headroom: ${id('headroomPct').value}`
+      ]);
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      doc.save(`fabric-capacity-calculation-${timestamp}.pdf`);
+    }
+
     document.querySelectorAll('input,select').forEach((el) => {
       el.addEventListener('input', recalculate);
       el.addEventListener('change', recalculate);
     });
+    id('saveJsonBtn').addEventListener('click', downloadJson);
+    id('importJsonInput').addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        applyState(JSON.parse(text));
+      } catch (error) {
+        alert(`Failed to import JSON: ${error.message}`);
+      } finally {
+        event.target.value = '';
+      }
+    });
+    id('exportPdfBtn').addEventListener('click', exportPdf);
 
     recalculate();
   </script>
