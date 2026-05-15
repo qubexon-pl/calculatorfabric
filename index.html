@@ -271,6 +271,7 @@
       <div class="card-body">
         <div class="section-title">Advanced workloads</div>
         <div class="row g-3">
+          <div class="col-12"><div class="fw-semibold text-secondary small-note text-uppercase">Real-time</div></div>
           <div class="col-md-6"><label class="form-label">Real-time / streaming</label>
             <select id="realtime" class="form-select">
               <option value="1.0" selected>None</option>
@@ -279,6 +280,8 @@
               <option value="1.7">Heavy</option>
             </select>
           </div>
+
+          <div class="col-12 mt-2"><div class="fw-semibold text-secondary small-note text-uppercase">ML use case</div></div>
           <div class="col-md-6"><label class="form-label">ML use cases</label><input id="mlUseCases" class="form-control" type="number" value="0" min="0"><div class="form-text">Number of active ML workloads.</div></div>
           <div class="col-md-6"><label class="form-label">ML complexity</label>
             <select id="mlComplexity" class="form-select">
@@ -288,15 +291,9 @@
               <option value="1.5">Heavy</option>
             </select>
           </div>
-          <div class="col-md-6"><label class="form-label">Dataflows Gen2</label>
-            <select id="dataflows" class="form-select">
-              <option value="1.0" selected>None</option>
-              <option value="1.05">Light</option>
-              <option value="1.1">Medium</option>
-              <option value="1.2">Heavy</option>
-            </select>
-          </div>
-          <div class="col-md-6"><label class="form-label">Safety headroom</label>
+
+          <div class="col-12 mt-2"><div class="fw-semibold text-secondary small-note text-uppercase">Buffer</div></div>
+          <div class="col-md-6"><label class="form-label">Safety headroom (%)</label>
             <select id="headroomPct" class="form-select">
               <option value="0.2">20%</option>
               <option value="0.35" selected>35% — recommended</option>
@@ -304,6 +301,28 @@
             </select>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="card section-card mb-4">
+      <div class="card-body">
+        <div class="section-title">Data Agent</div>
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Active users (U)</label><input id="daUsers" class="form-control" type="number" value="100" min="0"></div>
+          <div class="col-md-3"><label class="form-label">Queries/hr per user (Q)</label><input id="daQueriesPerHour" class="form-control" type="number" value="10" min="0"></div>
+          <div class="col-md-3"><label class="form-label">Input tokens/query (Tin)</label><input id="daInputTokens" class="form-control" type="number" value="1200" min="0"></div>
+          <div class="col-md-3"><label class="form-label">Output tokens/query (Tout)</label><input id="daOutputTokens" class="form-control" type="number" value="400" min="0"></div>
+          <div class="col-md-6"><label class="form-label">Semantic model size (GB)</label><input id="daModelGb" class="form-control" type="number" value="80" min="0"></div>
+          <div class="col-md-6"><label class="form-label">Model-size headroom factor</label>
+            <select id="daHeadroomFactor" class="form-select">
+              <option value="1.0">Small model (1.0x)</option>
+              <option value="1.2">Medium model (1.2x)</option>
+              <option value="1.5" selected>Large model (1.5x)</option>
+              <option value="2.0">Very large model (2.0x)</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-2 text-secondary small-note" id="dataAgentBasis"></div>
       </div>
     </div>
       </div>
@@ -421,9 +440,20 @@
       const mlComplexity = n('mlComplexity');
       const mlCuPerUseCase = 0.96;
       const mlCu = mlUseCases * mlComplexity * mlCuPerUseCase;
-      const advancedFactor = n('realtime') * n('dataflows');
+      const realtimeFactor = n('realtime');
 
-      const rawRequiredCu = (baseRequiredCu + mlCu) * advancedFactor;
+      const daUsers = Math.max(0, n('daUsers'));
+      const daQueriesPerHour = Math.max(0, n('daQueriesPerHour'));
+      const daInputTokens = Math.max(0, n('daInputTokens'));
+      const daOutputTokens = Math.max(0, n('daOutputTokens'));
+      const daModelGb = Math.max(0, n('daModelGb'));
+      const daHeadroomFactor = Math.max(1, n('daHeadroomFactor'));
+      const daQueriesHour = daUsers * daQueriesPerHour;
+      const daCuPerQuery = ((daInputTokens * 100) + (daOutputTokens * 400)) / 1000;
+      const daCuPerHour = daCuPerQuery * daQueriesHour;
+      const dataAgentCu = (daCuPerHour / 3600) * daHeadroomFactor;
+
+      const rawRequiredCu = ((baseRequiredCu + mlCu) * realtimeFactor) + dataAgentCu;
       const headroom = 1 + n('headroomPct');
       const withHeadroomCu = rawRequiredCu * headroom;
 
@@ -435,6 +465,7 @@
       id('pipelineBasis').textContent = `Bronze loading CU basis: ${fmt(bronzeLoadMin,1)}min × ITO factor ${ito} × 1.5 CU-hr rate × ${pipelineRuns.toFixed(1)} runs/day = ${fmt(pipelineCuHrDay, 1)} CU-hr/day`;
       id('notebookBasis').textContent = `Silver notebook runtime: ${fmt(silverGb,1)} GB × 1 min/GB + ${fmt(passthroughGb,1)} GB × 0.1 min/GB = ${fmt(silverNotebookMin,1)} minutes. Combined notebook runtime per run (Silver + Gold) = ${fmt(notebookRunMin,1)} minutes.`;
       id('goldBasis').textContent = `Gold runtime: ${fmt(bronzeVolume,1)} GB ÷ ${safeGoldObjects} objects = ${fmt(gbPerGoldObject,2)} GB/object × ${fmt(goldMinPerGb,1)} min/GB = ${fmt(goldPerObjectMin,2)} min/object. Total for ${goldObjects} objects = ${fmt(goldTotalMin,2)} minutes.`;
+      id('dataAgentBasis').textContent = `Data Agent: queries/hour = U×Q = ${fmt(daUsers,0)}×${fmt(daQueriesPerHour,0)} = ${fmt(daQueriesHour,0)}. CU-sec/query = (Tin×100 + Tout×400)/1000 = (${fmt(daInputTokens,0)}×100 + ${fmt(daOutputTokens,0)}×400)/1000 = ${fmt(daCuPerQuery,1)}. CU-sec/hour = ${fmt(daCuPerHour,0)}. Avg CU = CU-sec/hour ÷ 3600 = ${fmt(daCuPerHour/3600,2)}. Model headroom (${fmt(daModelGb,0)} GB, ${fmt(daHeadroomFactor,1)}x) => ${fmt(dataAgentCu,2)} CU.`;
 
       id('skuRec').textContent = recommended.sku;
       id('requiredRaw').textContent = fmt(rawRequiredCu, 1);
@@ -490,6 +521,13 @@
           avgCu: mlCu,
           basis: `${mlUseCases} ML use cases × complexity ${fmt(mlComplexity,1)} × ${fmt(mlCuPerUseCase,2)} CU/use case = ${fmt(mlCu,2)} avg CU. Justification: moderate ML (4 tables, ~50 MB) observed ~12% of F8 capacity (0.96 CU), used here as per-use-case baseline.`
         },
+        {
+          workload: 'Data Agent',
+          type: 'Interactive + AI token consumption',
+          cuHrDay: dataAgentCu * 24,
+          avgCu: dataAgentCu,
+          basis: `U ${fmt(daUsers,0)} × Q ${fmt(daQueriesPerHour,0)} = ${fmt(daQueriesHour,0)} queries/hour. CU-sec/query = (Tin ${fmt(daInputTokens,0)} × 100 + Tout ${fmt(daOutputTokens,0)} × 400)/1000 = ${fmt(daCuPerQuery,1)}. CU-sec/hour = ${fmt(daCuPerHour,0)}. Avg CU = ÷3600, then × ${fmt(daHeadroomFactor,1)}x model headroom for ${fmt(daModelGb,0)} GB semantic model = ${fmt(dataAgentCu,2)} CU.`
+        }
       ];
 
       const totalRow = `<tr><td><strong>Total required</strong></td><td></td><td></td><td><strong>${fmt(rawRequiredCu,2)} CU</strong></td><td>+ ${(n('headroomPct')*100).toFixed(0)}% = <strong>${fmt(withHeadroomCu,1)} CU</strong></td></tr>`;
@@ -501,7 +539,8 @@
         ['Semantic model refreshes', semanticAvgCu, '#0891b2'],
         ['Power BI report queries (interactive)', interactiveCu, '#ea580c'],
         ['Paginated reports', paginatedAvgCu, '#059669'],
-        ['Machine learning (ML) use cases', mlCu, '#db2777']
+        ['Machine learning (ML) use cases', mlCu, '#db2777'],
+        ['Data Agent', dataAgentCu, '#9333ea']
       ];
       const maxV = Math.max(...barData.map((d) => d[1]), 0.1);
       id('bars').innerHTML = barData.map(([name, val, color]) => {
