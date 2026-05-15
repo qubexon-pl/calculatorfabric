@@ -310,8 +310,8 @@
         <div class="row g-3">
           <div class="col-md-3"><label class="form-label">Active users (U)</label><input id="daUsers" class="form-control" type="number" value="100" min="0"></div>
           <div class="col-md-3"><label class="form-label">Queries/hr per user (Q)</label><input id="daQueriesPerHour" class="form-control" type="number" value="10" min="0"></div>
-          <div class="col-md-3"><label class="form-label">Input tokens/query (Tin)</label><input id="daInputTokens" class="form-control" type="number" value="1200" min="0"></div>
-          <div class="col-md-3"><label class="form-label">Output tokens/query (Tout)</label><input id="daOutputTokens" class="form-control" type="number" value="400" min="0"></div>
+          <div class="col-md-3"><label class="form-label">Input tokens (Tin)/query</label><input id="daInputTokens" class="form-control" type="number" value="1200" min="0"></div>
+          <div class="col-md-3"><label class="form-label">Output tokens (Tout)/query</label><input id="daOutputTokens" class="form-control" type="number" value="400" min="0"></div>
           <div class="col-md-6"><label class="form-label">Semantic model size (GB)</label><input id="daModelGb" class="form-control" type="number" value="80" min="0"></div>
           <div class="col-md-6"><label class="form-label">Model-size headroom factor</label>
             <select id="daHeadroomFactor" class="form-select">
@@ -320,6 +320,19 @@
               <option value="1.5" selected>Large model (1.5x)</option>
               <option value="2.0">Very large model (2.0x)</option>
             </select>
+          </div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-12">
+            <div class="alert alert-light border small-note mb-0" role="note">
+              <div class="fw-semibold mb-1">Data Agent helper</div>
+              <ul class="mb-2 ps-3">
+                <li><strong>Tin</strong> = input tokens per query (prompt, instructions, and retrieved context sent to the model).</li>
+                <li><strong>Tout</strong> = output tokens per query (model response generated back to the user).</li>
+                <li>Quick sizing example: <strong>1,000 tokens ≈ 750 words</strong> (approximation; language and formatting can change the ratio).</li>
+              </ul>
+              <div><strong>How utilization is calculated:</strong> the calculator totals workload demand into average required CU, applies selected safety headroom, then divides by the recommended SKU capacity (Required CU ÷ SKU CU × 100).</div>
+            </div>
           </div>
         </div>
         <div class="mt-2 text-secondary small-note" id="dataAgentBasis"></div>
